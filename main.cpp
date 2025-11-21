@@ -24,7 +24,14 @@ void printSeq(const sym_t arr[], int size) {
     cout << "]" << endl;
 }
 
+void printVector(std::vector<sym_t> vals) {    
+	for (int val : vals) {
+		cout << val << ","; 
+	}
+	cout << endl;
+}
 
+//COMBO LIB
 uint64_t comb(int n, int k) { //Binomial co-efficient of n-choose-k
 	//IMPORTANT NOTE: This only handles values in the range of uint64_t	
 	//Larger values can use: void fmpz_bin_uiui(fmpz_t f, ulong n, ulong k)
@@ -43,6 +50,30 @@ uint64_t comb(int n, int k) { //Binomial co-efficient of n-choose-k
     return res;
 }
 
+uint64_t comb_rank(std::vector<sym_t> vals) {
+	int k = vals.size();
+	uint64_t rank = 0;
+	
+	for (int i = 0; i < k; i++) {
+		rank += comb(vals[k-1-i], k-i);
+	}
+	return rank;
+}
+
+std::vector<sym_t> comb_unrank(uint64_t rank, int n, int k) {
+	std::vector<sym_t> vals(k);
+	
+	for (int i = 0; i < k; i++) {
+		while (comb(n, k-i) > rank) {
+			n--;
+		}
+		vals[k-i-1] = n;
+		rank -= comb(n, k - i);
+	}
+	return vals;
+}
+
+//END COMBO LIB
 
 //Combinatorial function to count the ways to rank:
 // - Filling up a sequence of N length (e.g. N = 3)
@@ -68,6 +99,13 @@ void addSymbolSection(big rank, int k) {
 
 
 void near_entropic_rank(big rank) {
+	std::vector<sym_t> cv = {1, 2, 3, 8, 12, 13, 14, 15};
+	uint64_t cr = comb_rank(cv);
+	std::vector<sym_t> ucr = comb_unrank(cr, MAX_SYM, 8);
+	cout << "Comb Rank: " << cr << endl;
+	cout << "Unrank: ";
+	printVector(ucr);
+	
 	sym_t valSeq[] = {1,7,7,1,14,7,0,11,2,13,13,12,11,2,0,7};
 	if (DEBUG) {
 		cout << "Ranking: ";
@@ -103,12 +141,10 @@ void near_entropic_rank(big rank) {
 	if (DEBUG) {
 		cout << "Sym Count: " << symCount << endl;
 		cout << "Sym Seq: ";
-		printSeq(symSeq, SEQ_LEN);		
+		printSeq(symSeq, SEQ_LEN);	
+		
 		cout << "Vals: ";
-		for (int val : vals) {
-			cout << val << ","; 
-		}
-		cout << endl;
+		printVector(vals);
 	}
 	
 	
@@ -120,9 +156,40 @@ void near_entropic_rank(big rank) {
 		//cout << "here" << endl;
 	}
 		
-	//if (DEBUG) count << "rank after symbol section: <<  rank << endl;
+	if (DEBUG) {
+		cout << "Rank after symbol section: " << endl;
+		fmpz_print(rank);
+	}
 	
-	//arith_stirling_number_2(rank, n, k);	
+	//Calculate section sizes	
+	uint64_t totalComb = comb(MAX_SYM, symCount);
+	big combSectionSize;
+	fmpz_fac_ui(combSectionSize, symCount);
+	
+	big stirSectionSize;
+	fmpz_mul_si(stirSectionSize, combSectionSize, totalComb);
+	
+	
+	//  2. Add Set Partition / Stirling2 rank 	
+	//Note: the symSeq is just the 0-indexed version of the RGF
+	big stirRank;
+	//TODO!!!
+	fmpz_addmul(rank, stirRank, stirSectionSize);
+	
+	if (DEBUG) {
+		cout << "Stir Rank: " << endl;
+		fmpz_print(stirRank);
+	}
+	
+	//  3. Add the combination rank 
+	
+	
+	//  4. Add the Sym/Set-Part Perm Rank (Myrvold)	
+	
+	if (DEBUG) {
+		cout << "Final Rank: " << endl;
+		fmpz_print(rank);
+	}
 }
 
 int main() {
