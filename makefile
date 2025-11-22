@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -Wall -std=c++17 -I./lib
 LDFLAGS = -lflint # Library linking
 
-SRCS = main.cpp lib/combinations.cpp
+SRCS = main.cpp lib/combinations.cpp lib/permutations.cpp
 OBJS = $(SRCS:.cpp=.o)
 TARGET = decimate
 
@@ -15,4 +15,4 @@ $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@ $(LDFLAGS)
 
 clean:
-	rm -f *.o decimate
+	rm -f *.o decimate lib/*.o
