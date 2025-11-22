@@ -7,6 +7,8 @@
 #include "flint/arith.h"
 #include "lib/combinations.h"
 #include "lib/permutations.h"
+//#include "lib/set_partitions.h"
+#include <array>
 using std::cout, std::endl;
 
 #define big fmpz_t
@@ -55,7 +57,87 @@ void addSymbolSection(big rank, int k) {
 	fmpz_addmul_si(rank, product, combinations);
 }
 
+//SET_PART
+//std::array<std::array< gen_rgf_table(int n, int k) {
+//	
+//}
+/*
+void rgf_rank(big rank, std::vector<uint8_t>& rgf, int k) {
+	// This calculates the rank of a set-partition with exactly k-parts
+	int n = rgf.size();
+	int currentMax = 1;
+	
+	//Gen Tabl
+	
+	fmpz_zero(rank);
+	
+	// RGF always starts with 1, so we iterate from the second element
+	for (int i = 1; i < n; i++) {
+		int remLen = n - 1 - i;
+		uint8_t digit = rgf[i];
+		
+		// We count the "branches" of the decision tree we skipped
+		// Branches are ordered 1, 2, ..., currentMax, currentMax+1
+		
+		if (digit == currentMax+1) {
+			// We picked the "new block" option.
+			// This implies we skipped all 'currentMax' options to join existing blocks.
+			// Each skipped option has weight table[remLen][currentMax]
+			big countSkipped;
+			fmpz_mul_ui(countSkipped, table[remLen][currentMax], currentMax);			
+			fmpz_add(rank, rank, countSkipped);			
+			currentMax++;
+		}
+		else {			
+			// We picked an existing block (digit <= currentMax).
+			// We skipped (digit - 1) options of joining smaller existing blocks.			
+			fmpz_addmul_ui(rank, table[remLen][currentMax], digit-1);
+			// currentMax does not change
+		}
+	}
+	
+}
 
+
+std::vector<uint8_t> rgf_unrank(big rank, int n, int k) {
+	//Converts a rank back into an RGF of length n with exactly k parts
+	//Gen table
+	std::vector<uint8_t> rgf(n);
+	int currentMax = 1;
+	
+	for (int i = 1; i < n; i++) {
+		int remLen = n - 1 - i;
+		
+		// Calculate the "weight" (number of possibilities) if we join an existing block
+		big weightStay;
+		weightStay = table[remLen][currentMax];
+		
+		// Total possibilities covered by joining ANY existing block (1..currentMax)
+		big countStay;
+		fmpz_mul_ui(countStay, weightStay, currentMax);
+		
+		if (fmpz_cmp(rank, countStay) < 0) {		
+			// The rank falls within the "join existing block" range.
+			// Determine exactly which block index (1..currentMax)
+			big bigVal;
+			fmpz_tdiv_q(bigVal, rank, weightStay
+			int val = fmpz_get_ui(bigVal) + 1;
+			rgf[i] = val;
+			fmpz_mod(rank, rank, weightStay);
+		}
+		else {
+			// The rank is beyond the "join existing" range, so we must start a new block.
+			rgf[i] = currentMax + 1;
+			fmpz_sub(rank, rank, countStay);			
+			currentMax++;
+		}
+	}
+	
+	return rgf;
+	
+}
+//END SET_PART
+*/
 
 
 void near_entropic_rank(big rank) {
