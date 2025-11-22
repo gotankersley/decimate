@@ -4,11 +4,11 @@
 
 //#include "flint/flint.h"
 #include "flint/fmpz.h"
+#include "flint/fmpz_mat.h"
 #include "flint/arith.h"
 #include "lib/combinations.h"
 #include "lib/permutations.h"
 //#include "lib/set_partitions.h"
-#include <array>
 using std::cout, std::endl;
 
 #define big fmpz_t
@@ -58,16 +58,49 @@ void addSymbolSection(big rank, int k) {
 }
 
 //SET_PART
-//std::array<std::array< gen_rgf_table(int n, int k) {
-//	
-//}
-/*
+void gen_rgf_table(fmpz_mat_t table, int n, int k) {
+	//Generates a table where table[remLen][currentMax] stores the number of ways 
+	//to complete a partition of 'remLen' remaining elements, given the 
+	//'currentMax' block index, such that the final number of blocks is exactly k
+	
+	// Table dimensions: (n+1) rows for remaining length, (k+2) cols for current max
+	fmpz_mat_init(table, n+1, k+2);
+	
+	// Base Case: If 0 elements remain, we represent a valid partition ONLY if
+	// we have already reached exactly k blocks	
+	fmpz_one(fmpz_mat_entry(table, 0, k));
+	
+	for (int length = 1; length < (n+1); length++) {
+		for (int m = 1; m < (k+1); m++) {
+			// Recurrence:
+			// 1. Join an existing block (1..m). There are 'm' choices.
+			//	 We consume 1 length, max stays 'm'.
+			// 2. Create a new block (m+1). There is 1 choice.
+			//	 We consume 1 length, max becomes 'm+1'.
+			// Note: If m+1 > k, table[length-1][m+1] will be 0, enforcing the limit.
+			
+			//table[length][m] = (m * table[length-1][m]) + table[length-1][m+1]	
+			big product;
+			fmpz_mul_ui(product, fmpz_mat_entry(table, length-1, m), m);
+			fmpz_add(
+				fmpz_mat_entry(table, length, m),
+				product,
+				fmpz_mat_entry(table, length-1, m+1)
+			);
+		}
+	}
+	
+	fmpz_mat_print_pretty(table);
+	//Don't forget to call fmpz_mat_clear(table);
+}
+
 void rgf_rank(big rank, std::vector<uint8_t>& rgf, int k) {
 	// This calculates the rank of a set-partition with exactly k-parts
 	int n = rgf.size();
 	int currentMax = 1;
 	
-	//Gen Tabl
+	fmpz_mat_t table;
+	gen_rgf_table(table, n, k);
 	
 	fmpz_zero(rank);
 	
@@ -84,25 +117,27 @@ void rgf_rank(big rank, std::vector<uint8_t>& rgf, int k) {
 			// This implies we skipped all 'currentMax' options to join existing blocks.
 			// Each skipped option has weight table[remLen][currentMax]
 			big countSkipped;
-			fmpz_mul_ui(countSkipped, table[remLen][currentMax], currentMax);			
+			fmpz_mul_ui(countSkipped, fmpz_mat_entry(table, remLen, currentMax), currentMax);			
 			fmpz_add(rank, rank, countSkipped);			
 			currentMax++;
 		}
 		else {			
 			// We picked an existing block (digit <= currentMax).
 			// We skipped (digit - 1) options of joining smaller existing blocks.			
-			fmpz_addmul_ui(rank, table[remLen][currentMax], digit-1);
+			fmpz_addmul_ui(rank, fmpz_mat_entry(table, remLen, currentMax), digit-1);
 			// currentMax does not change
 		}
 	}
-	
+	fmpz_mat_clear(table);
 }
 
 
 std::vector<uint8_t> rgf_unrank(big rank, int n, int k) {
 	//Converts a rank back into an RGF of length n with exactly k parts
-	//Gen table
 	std::vector<uint8_t> rgf(n);
+	fmpz_mat_t table;
+	gen_rgf_table(table, n, k);
+	
 	int currentMax = 1;
 	
 	for (int i = 1; i < n; i++) {
@@ -110,7 +145,7 @@ std::vector<uint8_t> rgf_unrank(big rank, int n, int k) {
 		
 		// Calculate the "weight" (number of possibilities) if we join an existing block
 		big weightStay;
-		weightStay = table[remLen][currentMax];
+		fmpz_set(weightStay, fmpz_mat_entry(table, remLen, currentMax));
 		
 		// Total possibilities covered by joining ANY existing block (1..currentMax)
 		big countStay;
@@ -120,7 +155,7 @@ std::vector<uint8_t> rgf_unrank(big rank, int n, int k) {
 			// The rank falls within the "join existing block" range.
 			// Determine exactly which block index (1..currentMax)
 			big bigVal;
-			fmpz_tdiv_q(bigVal, rank, weightStay
+			fmpz_tdiv_q(bigVal, rank, weightStay);
 			int val = fmpz_get_ui(bigVal) + 1;
 			rgf[i] = val;
 			fmpz_mod(rank, rank, weightStay);
@@ -132,12 +167,12 @@ std::vector<uint8_t> rgf_unrank(big rank, int n, int k) {
 			currentMax++;
 		}
 	}
-	
+	fmpz_mat_clear(table);
 	return rgf;
 	
 }
 //END SET_PART
-*/
+
 
 
 void near_entropic_rank(big rank) {
@@ -230,7 +265,8 @@ void near_entropic_rank(big rank) {
 		cout << "Comb Rank: " << combRank << endl;
 		//std::vector<uint8_t> cv = {1, 2, 3, 8, 12, 13, 14, 15};
 		//uint64_t cr = comb_rank(cv);
-		//std::vector<uint8_t> ucr = comb_unrank(cr, MAX_SYM, 8);
+		//std::vector<uint8_t> vals(k);
+		//std::vector<uint8_t> ucr = comb_unrank(vals, cr, MAX_SYM, 8);
 		//cout << "Comb Rank: " << cr << endl;
 		//cout << "Unrank: ";
 		//printVector(ucr);

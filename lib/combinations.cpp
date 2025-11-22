@@ -29,8 +29,7 @@ uint64_t comb_rank(std::vector<uint8_t>& vals) {
 	return rank;
 }
 
-std::vector<uint8_t> comb_unrank(uint64_t rank, int n, int k) {
-	std::vector<uint8_t> vals(k);
+void comb_unrank(std::vector<uint8_t>& vals, uint64_t rank, int n, int k) {	
 	
 	for (int i = 0; i < k; i++) {
 		while (comb(n, k-i) > rank) {
@@ -38,6 +37,5 @@ std::vector<uint8_t> comb_unrank(uint64_t rank, int n, int k) {
 		}
 		vals[k-i-1] = n;
 		rank -= comb(n, k - i);
-	}
-	return vals;
+	}	
 }
