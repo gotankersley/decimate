@@ -1,8 +1,8 @@
 CXX = g++
-CXXFLAGS = -Wall -std=c++17 
+CXXFLAGS = -Wall -std=c++17 -I./lib
 LDFLAGS = -lflint # Library linking
 
-SRCS = main.cpp combinations.cpp
+SRCS = main.cpp lib/combinations.cpp
 OBJS = $(SRCS:.cpp=.o)
 TARGET = decimate
 

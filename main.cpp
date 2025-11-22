@@ -4,7 +4,7 @@
 //#include "flint/flint.h"
 #include "flint/fmpz.h"
 #include "flint/arith.h"
-#include "combinations.h"
+#include "lib/combinations.h"
 using std::cout, std::endl;
 
 #define big fmpz_t
@@ -33,7 +33,40 @@ void printVector(std::vector<uint8_t> vals) {
 
 
 //PERM LIB
+void myrvold_rank_recur(big rank, int n, std::vector<uint8_t> perm, std::vector<uint8_t> invPerm) {
+	if (n < 2) return; //Anchor
+	
+	uint8_t s = perm[n-1];
+	//Swap
+	uint8_t tmp1 = perm[invPerm[n-1]];
+	uint8_t tmp2 = perm[n-1];
+	perm[n-1] = tmp1;
+	perm[invPerm[n-1]] = tmp2;
+	
+	tmp1 = invPerm[n-1];
+	tmp2 = invPerm[s];
+	invPerm[s] = tmp1;
+	invPerm[n-1] = tmp2;
+	
+	//Recurse
+	myrvold_rank_recur(rank, n-1, perm, invPerm);
+	fmpz_mul_ui(rank, rank, n);
+	fmpz_add_ui(rank, rank, s);
+	
+}
 
+
+
+void myrvold_rank(big rank, std::vector<uint8_t> perm) {
+	int permSize = perm.size();
+	std::vector<uint8_t> invPerm(perm.size());
+	for (int i = 0; i < permSize; i++) {
+		uint8_t pos = perm[i];
+		invPerm[pos] = i;
+	}
+	
+	myrvold_rank_recur(rank, permSize, perm, invPerm);
+}
 
 //END PERM LIB
 
@@ -61,12 +94,7 @@ void addSymbolSection(big rank, int k) {
 
 
 void near_entropic_rank(big rank) {
-	std::vector<uint8_t> cv = {1, 2, 3, 8, 12, 13, 14, 15};
-	uint64_t cr = comb_rank(cv);
-	std::vector<uint8_t> ucr = comb_unrank(cr, MAX_SYM, 8);
-	cout << "Comb Rank: " << cr << endl;
-	cout << "Unrank: ";
-	printVector(ucr);
+	
 	
 	uint8_t valSeq[] = {1,7,7,1,14,7,0,11,2,13,13,12,11,2,0,7};
 	if (DEBUG) {
@@ -91,7 +119,7 @@ void near_entropic_rank(big rank) {
 		if (valToSym[val] == INVALID) { //First time this symbol has been seen		
 			symCount++;
 			valToSym[val] = symCount;
-			sym = symCount;
+			sym = symCount;			
 			vals.push_back(val);
 		}
 		else sym = valToSym[val];
@@ -100,13 +128,16 @@ void near_entropic_rank(big rank) {
 	}
 	symCount++; //So that it reflects the total properly 
 	
+	//Permutation of symbols -> vals
+	
+	
 	if (DEBUG) {
 		cout << "Sym Count: " << symCount << endl;
 		cout << "Sym Seq: ";
 		printSeq(symSeq, SEQ_LEN);	
 		
 		cout << "Vals: ";
-		printVector(vals);
+		printVector(vals);		
 	}
 	
 	
@@ -121,6 +152,7 @@ void near_entropic_rank(big rank) {
 	if (DEBUG) {
 		cout << "Rank after symbol section: " << endl;
 		fmpz_print(rank);
+		cout << endl;
 	}
 	
 	//Calculate section sizes	
@@ -141,6 +173,7 @@ void near_entropic_rank(big rank) {
 	if (DEBUG) {
 		cout << "Stir Rank: " << endl;
 		fmpz_print(stirRank);
+		cout << endl;
 	}
 	
 	//  3. Add the combination rank 
@@ -148,15 +181,39 @@ void near_entropic_rank(big rank) {
 	fmpz_addmul_si(rank, combSectionSize, combRank);
 	if (DEBUG) {
 		cout << "Comb Rank: " << combRank << endl;
+		//std::vector<uint8_t> cv = {1, 2, 3, 8, 12, 13, 14, 15};
+		//uint64_t cr = comb_rank(cv);
+		//std::vector<uint8_t> ucr = comb_unrank(cr, MAX_SYM, 8);
+		//cout << "Comb Rank: " << cr << endl;
+		//cout << "Unrank: ";
+		//printVector(ucr);
 	}
 	
-	//  4. Add the Sym/Set-Part Perm Rank (Myrvold)	
+	//  4. Add the Sym Perm Rank (Myrvold)	
+	std::vector<uint8_t> symPerm(symCount);	
+	for (int i = 0; i < MAX_SYM; i++) { 
+		//Traverse vals in order
+		if (valToSym[i] != INVALID) {
+			symPerm.push_back(valToSym[i]);
+		}
+	}
+	big myrvoldRank;
+	myrvold_rank(myrvoldRank, symPerm);
+	fmpz_add(rank, rank, myrvoldRank);
 	
-	
+	if (DEBUG) {
+		cout << "Sym Perm: ";
+		printVector(symPerm);
+		
+		cout << "Myrvold Rank: ";
+		fmpz_print (myrvoldRank);
+		cout << endl;
+	}
 	
 	if (DEBUG) {
 		cout << "Final Rank: " << endl;
 		fmpz_print(rank);
+		cout << endl;
 	}
 }
 
