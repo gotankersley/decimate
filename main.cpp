@@ -72,7 +72,7 @@ void near_entropic_rank(fmpz_t rank) {
 		valToSym[i] = INVALID;
 	}
 	std::vector<uint8_t> vals;
-	uint8_t symSeq[SEQ_LEN];
+	std::vector<uint8_t> rgfSeq(SEQ_LEN);
 		
 	int symCount = INVALID;
 	//Loop read in files as i16
@@ -88,7 +88,7 @@ void near_entropic_rank(fmpz_t rank) {
 		}
 		else sym = valToSym[val];
 		
-		symSeq[i] = sym;			
+		rgfSeq[i] = sym + 1; //RGF is 1-indexed			
 	}
 	symCount++; //So that it reflects the total properly 
 	
@@ -98,7 +98,7 @@ void near_entropic_rank(fmpz_t rank) {
 	if (DEBUG) {
 		cout << "Sym Count: " << symCount << endl;
 		cout << "Sym Seq: ";
-		printSeq(symSeq, SEQ_LEN);	
+		printVector(rgfSeq);
 		
 		cout << "Vals: ";
 		printVector(vals);		
@@ -128,10 +128,9 @@ void near_entropic_rank(fmpz_t rank) {
 	fmpz_mul_si(stirSectionSize, combSectionSize, totalComb);
 	
 	
-	//  2. Add Set Partition / Stirling2 rank 	
-	//Note: the symSeq is just the 0-indexed version of the RGF
+	//  2. Add Set Partition / Stirling2 rank 		
 	fmpz_t stirRank;
-	//TODO!!!
+	rgf_rank(stirRank, rgfSeq, symCount);
 	fmpz_addmul(rank, stirRank, stirSectionSize);
 	
 	if (DEBUG) {

@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -Wall -std=c++17 -I./lib
 LDFLAGS = -lflint # Library linking
 
-SRCS = main.cpp lib/combinations.cpp lib/permutations.cpp
+SRCS = main.cpp lib/combinations.cpp lib/permutations.cpp lib/set_partitions.cpp
 OBJS = $(SRCS:.cpp=.o)
 TARGET = decimate
 
