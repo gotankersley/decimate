@@ -146,7 +146,7 @@ void near_entropic_rank(fmpz_t rank, std::vector<uint8_t>& valSeq) {
 	//  2. Add Set Partition / Stirling2 rank 		
 	fmpz_t stirRank;
 	fmpz_init(stirRank);
-	rgf_rank(stirRank, rgfSeq, symCount);
+	rgf_rank(rgfSeq, symCount, stirRank);
 	fmpz_addmul(rank, stirRank, stirSectionSize);
 	fmpz_clear(stirSectionSize);
 	
@@ -243,7 +243,7 @@ void near_entropic_unrank(fmpz_t rank, std::vector<uint8_t>& rgfSeq) {
 	fmpz_init(stirRank);
 	fmpz_tdiv_q(stirRank, rank, stirSectionSize);
 	
-	rgf_unrank(rgfSeq, stirRank, SEQ_LEN, symCount);
+	rgf_unrank(stirRank, SEQ_LEN, symCount, rgfSeq);
 	fmpz_addmul(rank, stirRank, stirSectionSize);
 	
 	if (DEBUG) {

@@ -1,16 +1,16 @@
 #include "set_partitions.h"
 
-void gen_rgf_table(fmpz_mat_t table, int n, int k) {
+void gen_rgf_table(int n, int k, fmpz_mat_t tableOut) {
 	//Generates a table where table[remLen][currentMax] stores the number of ways 
 	//to complete a partition of 'remLen' remaining elements, given the 
 	//'currentMax' block index, such that the final number of blocks is exactly k
 	
 	// Table dimensions: (n+1) rows for remaining length, (k+2) cols for current max
-	fmpz_mat_init(table, n+1, k+2);
+	fmpz_mat_init(tableOut, n+1, k+2);
 	
 	// Base Case: If 0 elements remain, we represent a valid partition ONLY if
 	// we have already reached exactly k blocks	
-	fmpz_one(fmpz_mat_entry(table, 0, k));
+	fmpz_one(fmpz_mat_entry(tableOut, 0, k));
 	
 	for (int length = 1; length < (n+1); length++) {
 		for (int m = 1; m < (k+1); m++) {
@@ -23,28 +23,28 @@ void gen_rgf_table(fmpz_mat_t table, int n, int k) {
 			
 			//table[length][m] = (m * table[length-1][m]) + table[length-1][m+1]	
 			fmpz_t product;
-			fmpz_mul_ui(product, fmpz_mat_entry(table, length-1, m), m);
+			fmpz_mul_ui(product, fmpz_mat_entry(tableOut, length-1, m), m);
 			fmpz_add(
-				fmpz_mat_entry(table, length, m),
+				fmpz_mat_entry(tableOut, length, m),
 				product,
-				fmpz_mat_entry(table, length-1, m+1)
+				fmpz_mat_entry(tableOut, length-1, m+1)
 			);
 		}
 	}
 	
-	fmpz_mat_print_pretty(table);
+	fmpz_mat_print_pretty(tableOut);
 	//Don't forget to call fmpz_mat_clear(table);
 }
 
-void rgf_rank(fmpz_t rank, std::vector<uint8_t>& rgf, int k) {
+void rgf_rank(std::vector<uint8_t>& rgf, int k, fmpz_t rankOut) {
 	// This calculates the rank of a set-partition with exactly k-parts
 	int n = rgf.size();
 	int currentMax = 1;
 	
 	fmpz_mat_t table;
-	gen_rgf_table(table, n, k);
+	gen_rgf_table(n, k, table);
 	
-	fmpz_zero(rank);
+	fmpz_zero(rankOut);
 	
 	// RGF always starts with 1, so we iterate from the second element
 	for (int i = 1; i < n; i++) {
@@ -60,13 +60,13 @@ void rgf_rank(fmpz_t rank, std::vector<uint8_t>& rgf, int k) {
 			// Each skipped option has weight table[remLen][currentMax]
 			fmpz_t countSkipped;
 			fmpz_mul_ui(countSkipped, fmpz_mat_entry(table, remLen, currentMax), currentMax);			
-			fmpz_add(rank, rank, countSkipped);			
+			fmpz_add(rankOut, rankOut, countSkipped);			
 			currentMax++;
 		}
 		else {			
 			// We picked an existing block (digit <= currentMax).
 			// We skipped (digit - 1) options of joining smaller existing blocks.			
-			fmpz_addmul_ui(rank, fmpz_mat_entry(table, remLen, currentMax), digit-1);
+			fmpz_addmul_ui(rankOut, fmpz_mat_entry(table, remLen, currentMax), digit-1);
 			// currentMax does not change
 		}
 	}
@@ -74,11 +74,10 @@ void rgf_rank(fmpz_t rank, std::vector<uint8_t>& rgf, int k) {
 }
 
 
-void rgf_unrank(std::vector<uint8_t>& rgf, fmpz_t rank, int n, int k) {
-	//Converts a rank back into an RGF of length n with exactly k parts
-	//std::vector<uint8_t> rgf(n);
+void rgf_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& rgfOut) {
+	//Converts a rank back into an RGF of length n with exactly k parts	
 	fmpz_mat_t table;
-	gen_rgf_table(table, n, k);
+	gen_rgf_table( n, k, table);
 	
 	int currentMax = 1;
 	
@@ -99,12 +98,12 @@ void rgf_unrank(std::vector<uint8_t>& rgf, fmpz_t rank, int n, int k) {
 			fmpz_t fmpz_tVal;
 			fmpz_tdiv_q(fmpz_tVal, rank, weightStay);
 			int val = fmpz_get_ui(fmpz_tVal) + 1;
-			rgf[i] = val;
+			rgfOut[i] = val;
 			fmpz_mod(rank, rank, weightStay);
 		}
 		else {
 			// The rank is beyond the "join existing" range, so we must start a new block.
-			rgf[i] = currentMax + 1;
+			rgfOut[i] = currentMax + 1;
 			fmpz_sub(rank, rank, countStay);			
 			currentMax++;
 		}
