@@ -258,6 +258,21 @@ void near_entropic_unrank(fmpz_t rank) {
 	}
 	
 	// Apply to recreate seq
+	std::vector<uint8_t> symToVal(symCount);
+	for (int i = 0; i < (int)combVals.size(); i++) {
+		uint8_t val = combVals[i];
+		symToVal[i] = val;
+	}
+	//TODO - this could maybe be moved to the Stirling section to avoid another loop over SEQ_LEN
+	for (int i = 0; i < SEQ_LEN; i++) {
+		uint8_t val = symToVal[symPerm[(rgfSeq[i]-1)]];
+		rgfSeq[i] = val;
+	}
+	
+	if (DEBUG) {
+		cout << "Final Seq: ";
+		printVector(rgfSeq);
+	}
 }
 
 int main() {
