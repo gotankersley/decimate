@@ -1,5 +1,5 @@
 #include "combinations.h"
-#include <iostream>
+
 
 uint64_t comb(int n, int k) { //Binomial co-efficient of n-choose-k
 	//IMPORTANT NOTE: This only handles values in the range of uint64_t	

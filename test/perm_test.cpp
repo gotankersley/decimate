@@ -10,41 +10,54 @@
 using std::cout, std::endl;
 
 
-const int P = 3;
+const int P = 5;
 
+
+uint64_t factorial(int n) {
+    if (n < 0) {
+        // Factorial is not defined for negative numbers
+        return 0; // Or throw an exception
+    }
+    uint64_t result = 1;
+    for (int i = 1; i <= n; ++i) {
+        result *= i;
+    }
+    return result;
+}
 
 void printVector(std::vector<uint8_t>& vals) {    
 	for (int val : vals) {
-		cout << val << ","; 
+		cout << +val << ","; 
 	}
 	cout << endl;
 }
 
-int main() {
-	
-	fmpz_t bigFact;
-	fmpz_fac_ui(bigFact, P);
-	uint64_t fact = fmpz_get_ui(bigFact);
-	
-	for (int r = 0; r < fact; r++) {
-		fmpz_t rank;	
 
-		std::vector<uint8_t> perm(P);
-		myrvold_unrank(perm, rank);
-		cout << "Unrank: ";
-		printVector(uperm); 
+int main() {
 		
-		std::vector<uint8_t> perm = {2, 0, 1};
-		myrvold_rank(mrank, perm);
-		cout << "Perm: ";
-		printVector(perm);
-		fmpz_print(mrank);
-		cout << endl;
-		
-		assert(r == rank && "rank does not match!");
-	}
-	int combs = comb(N, K);
+	uint64_t fact = factorial(P);
 	
+	for (uint64_t r = 0; r < fact; r++) {	
+		fmpz_t bigR;
+		fmpz_init(bigR);
+		fmpz_set_si(bigR, r);						
+		std::vector<uint8_t> perm(P);
+		myrvold_unrank(bigR, perm);
+		fmpz_clear(bigR);
+		
+		cout << "Perm: ";
+		printVector(perm); 
+				
+		fmpz_t rank;	
+		fmpz_init(rank);
+		myrvold_rank(perm, rank);				
+		
+		assert(fmpz_equal_si(rank, r) && "rank does not match!");
+		
+		
+		fmpz_clear(rank);
+	}
+		
 	
 	return 0;
 }

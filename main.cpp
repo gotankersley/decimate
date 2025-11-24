@@ -28,7 +28,7 @@ void printSeq(const uint8_t arr[], int size) {
 
 void printVector(std::vector<uint8_t>& vals) {    
 	for (int val : vals) {
-		cout << val << ","; 
+		cout << +val << ","; 
 	}
 	cout << endl;
 }
@@ -159,16 +159,16 @@ void near_entropic_rank(fmpz_t rank, std::vector<uint8_t>& valSeq) {
 	}
 	
 	//  4. Add the Sym Perm Rank (Myrvold)	
-	fmpz_t myrvoldRank;
-	myrvold_rank(myrvoldRank, symPerm);
-	fmpz_add(rank, rank, myrvoldRank);
+	fmpz_t symRank;
+	myrvold_rank(symPerm, symRank);
+	fmpz_add(rank, rank, symRank);
 	
 	if (DEBUG) {
 		cout << "Sym Perm: ";
 		printVector(symPerm);
 		
-		cout << "Myrvold Rank: ";
-		fmpz_print (myrvoldRank);
+		cout << "Sym Rank: ";
+		fmpz_print (symRank);
 		cout << endl;
 		
 		cout << "Final Rank: " << endl;
@@ -244,7 +244,7 @@ void near_entropic_unrank(fmpz_t rank, std::vector<uint8_t>& rgfSeq) {
 	fmpz_t symRank;
 	fmpz_mod(symRank, rank, combSectionSize);	
 	std::vector<uint8_t> symPerm(symCount);
-	myrvold_unrank(symPerm, symRank);		
+	myrvold_unrank(symRank, symPerm);
 	
 	if (DEBUG) {
 		cout << "Sym Perm: ";
