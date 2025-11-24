@@ -32,7 +32,7 @@ void gen_rgf_table(int n, int k, fmpz_mat_t tableOut) {
 		}
 	}
 	
-	fmpz_mat_print_pretty(tableOut);
+	//fmpz_mat_print_pretty(tableOut);
 	//Don't forget to call fmpz_mat_clear(table);
 }
 
@@ -78,7 +78,7 @@ void rgf_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& rgfOut) {
 	//Converts a rank back into an RGF of length n with exactly k parts	
 	fmpz_mat_t table;
 	gen_rgf_table( n, k, table);
-	
+	rgfOut[0] = 1;
 	int currentMax = 1;
 	
 	for (int i = 1; i < n; i++) {
