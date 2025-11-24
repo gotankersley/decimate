@@ -172,13 +172,92 @@ void near_entropic_rank(fmpz_t rank) {
 		cout << "Myrvold Rank: ";
 		fmpz_print (myrvoldRank);
 		cout << endl;
-	}
-	
-	if (DEBUG) {
+		
 		cout << "Final Rank: " << endl;
 		fmpz_print(rank);
 		cout << endl;
 	}
+}
+
+void near_entropic_unrank(fmpz_t rank) {
+			
+	
+	//  1. Get symbol section
+	if (DEBUG) {
+		cout << "Unranking" << endl;
+		cout << "Rank: " << endl;
+		fmpz_print(rank);
+		cout << endl;
+	}
+	fmpz_t count;
+	fmpz_t prevCount;
+	fmpz_zero(count);
+	fmpz_zero(prevCount);
+	int symCount = INVALID;
+	for (int i = 1; i <= MAX_SYM; i++) {
+		addSymbolSection(count, i);		
+		if (fmpz_cmp(count, rank) > 0) {		
+			symCount = i;
+			fmpz_sub(rank, rank, prevCount);
+			break;
+		}
+		else fmpz_set(prevCount, count);
+	}
+	
+	if (DEBUG) {
+		cout << "Sym Count: " << symCount << endl;		
+	}
+	
+	//Calculate section sizes	
+	uint64_t totalComb = comb(MAX_SYM, symCount);
+	fmpz_t combSectionSize;
+	fmpz_fac_ui(combSectionSize, symCount);
+	
+	fmpz_t stirSectionSize;
+	fmpz_mul_si(stirSectionSize, combSectionSize, totalComb);
+	
+
+	// 2. Get the Set Partition from Stirling2 rank		
+	fmpz_t stirRank;
+	fmpz_tdiv_q(stirRank, rank, stirSectionSize);
+	std::vector<uint8_t> rgfSeq(SEQ_LEN);
+	rgf_unrank(rgfSeq, stirRank, SEQ_LEN, symCount);
+	fmpz_addmul(rank, stirRank, stirSectionSize);
+	
+	if (DEBUG) {
+		cout << "Stir Rank: " << endl;
+		fmpz_print(stirRank);
+		cout << endl;
+	}
+	
+	// 3. Get the values from the combination rank of symbols
+	fmpz_t rankModStir;
+	fmpz_mod(rankModStir, rank, stirSectionSize);	
+	fmpz_tdiv_q(rankModStir, rankModStir, combSectionSize);
+	uint64_t combRank = fmpz_get_ui(rankModStir);
+	std::vector<uint8_t> combVals;
+	comb_unrank(combVals, combRank, MAX_SYM, symCount);
+	
+	if (DEBUG) {
+		cout << "Comb Rank: " << combRank << endl;
+	}
+	
+	//  4. Add the Sym Perm Rank (Myrvold)	
+	fmpz_t symRank;
+	fmpz_mod(symRank, rank, combSectionSize);	
+	std::vector<uint8_t> symPerm(symCount);
+	myrvold_unrank(symPerm, symRank, symCount);		
+	
+	if (DEBUG) {
+		cout << "Sym Perm: ";
+		printVector(symPerm);
+		
+		cout << "Myrvold Rank: ";
+		fmpz_print (symRank);
+		cout << endl;
+	}
+	
+	// Apply to recreate seq
 }
 
 int main() {
