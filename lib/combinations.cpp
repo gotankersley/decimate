@@ -1,22 +1,20 @@
 #include "combinations.h"
-
+#include <iostream>
 
 uint64_t comb(int n, int k) { //Binomial co-efficient of n-choose-k
 	//IMPORTANT NOTE: This only handles values in the range of uint64_t	
 	//Larger values can use: void fmpz_bin_uiui(fmpz_t f, ulong n, ulong k)
 	uint64_t res = 1;
 
-	// Since C(n, k) = C(n, n-k), we can optimize by choosing the smaller k
-	if (k > n - k) {
-		k = n - k;
+	if ((k < 0) || (n < k)) return 0;
+	if ((2*k) > n) k = n-k;
+	
+	if (k > 0) {
+		for(int i = 0; i <= (k-1); i++) {
+			res = (res * (n-i))/(i+1);
+		}
 	}
-
-    // Calculate value of [n * (n-1) * ... * (n-k+1)] / [k * (k-1) * ... * 1]
-    for (int i = 0; i < k; ++i) {
-        res *= (n - i);
-        res /= (i + 1);
-    }
-    return res;
+	return res;
 }
 
 uint64_t comb_rank(std::vector<uint8_t>& vals) {
@@ -32,7 +30,7 @@ uint64_t comb_rank(std::vector<uint8_t>& vals) {
 void comb_unrank(std::vector<uint8_t>& vals, uint64_t rank, int n, int k) {	
 	
 	for (int i = 0; i < k; i++) {
-		while (comb(n, k-i) > rank) {
+		while (comb(n, k-i) > rank) {			
 			n--;
 		}
 		vals[k-i-1] = n;

@@ -57,13 +57,13 @@ void addSymbolSection(fmpz_t rank, int k) {
 
 
 
-void near_entropic_rank(fmpz_t rank) {
+void near_entropic_rank(fmpz_t rank, std::vector<uint8_t>& valSeq) {
 			
 	
-	uint8_t valSeq[] = {1,7,7,1,14,7,0,11,2,13,13,12,11,2,0,7};
+	//uint8_t valSeq[] = {1,7,7,1,14,7,0,11,2,13,13,12,11,2,0,7};
 	if (DEBUG) {
-		cout << "Ranking: ";
-		printSeq(valSeq, SEQ_LEN);
+		cout << "Ranking: ";		
+		printVector(valSeq);
 	}
 	
 	//Pre-process file bits -> seq	
@@ -71,7 +71,7 @@ void near_entropic_rank(fmpz_t rank) {
 	for (int i = 0; i < MAX_SYM; i++) {
 		valToSym[i] = INVALID;
 	}
-	std::vector<uint8_t> vals;
+
 	std::vector<uint8_t> rgfSeq(SEQ_LEN);
 		
 	int symCount = INVALID;
@@ -83,8 +83,7 @@ void near_entropic_rank(fmpz_t rank) {
 		if (valToSym[val] == INVALID) { //First time this symbol has been seen		
 			symCount++;
 			valToSym[val] = symCount;
-			sym = symCount;			
-			vals.push_back(val);
+			sym = symCount;						
 		}
 		else sym = valToSym[val];
 		
@@ -93,7 +92,15 @@ void near_entropic_rank(fmpz_t rank) {
 	symCount++; //So that it reflects the total properly 
 	
 	//Permutation of symbols -> vals
-	
+	std::vector<uint8_t> vals;
+	std::vector<uint8_t> symPerm(symCount);	
+	for (int i = 0; i < MAX_SYM; i++) { 
+		//Traverse vals in order
+		if (valToSym[i] != INVALID) {
+			vals.push_back(i);
+			symPerm[i] = valToSym[i];
+		}		
+	}
 	
 	if (DEBUG) {
 		cout << "Sym Count: " << symCount << endl;
@@ -143,7 +150,12 @@ void near_entropic_rank(fmpz_t rank) {
 	uint64_t combRank = comb_rank(vals);	
 	fmpz_addmul_si(rank, combSectionSize, combRank);
 	if (DEBUG) {
-		cout << "Comb Rank: " << combRank << endl;
+		cout << "Comb Rank: " << combRank << endl;		
+		cout << "Comb Vals: ";
+		printVector(vals);
+		cout << "Comb Section Size: ";
+		fmpz_print(combSectionSize);
+		cout << endl;
 		//std::vector<uint8_t> cv = {1, 2, 3, 8, 12, 13, 14, 15};
 		//uint64_t cr = comb_rank(cv);
 		//std::vector<uint8_t> vals(k);
@@ -154,13 +166,6 @@ void near_entropic_rank(fmpz_t rank) {
 	}
 	
 	//  4. Add the Sym Perm Rank (Myrvold)	
-	std::vector<uint8_t> symPerm(symCount);	
-	for (int i = 0; i < MAX_SYM; i++) { 
-		//Traverse vals in order
-		if (valToSym[i] != INVALID) {
-			symPerm.push_back(valToSym[i]);
-		}
-	}
 	fmpz_t myrvoldRank;
 	myrvold_rank(myrvoldRank, symPerm);
 	fmpz_add(rank, rank, myrvoldRank);
@@ -179,7 +184,7 @@ void near_entropic_rank(fmpz_t rank) {
 	}
 }
 
-void near_entropic_unrank(fmpz_t rank) {
+void near_entropic_unrank(fmpz_t rank, std::vector<uint8_t>& rgfSeq) {
 			
 	
 	//  1. Get symbol section
@@ -220,7 +225,7 @@ void near_entropic_unrank(fmpz_t rank) {
 	// 2. Get the Set Partition from Stirling2 rank		
 	fmpz_t stirRank;
 	fmpz_tdiv_q(stirRank, rank, stirSectionSize);
-	std::vector<uint8_t> rgfSeq(SEQ_LEN);
+	//std::vector<uint8_t> rgfSeq(SEQ_LEN);
 	rgf_unrank(rgfSeq, stirRank, SEQ_LEN, symCount);
 	fmpz_addmul(rank, stirRank, stirSectionSize);
 	
@@ -277,9 +282,10 @@ void near_entropic_unrank(fmpz_t rank) {
 
 int main() {
 		
+	std::vector<uint8_t> valSeq = {1,7,7,1,14,7,0,11,2,13,13,12,11,2,0,7};
 	fmpz_t rank;
-	near_entropic_rank( rank);	
-	//fmpz_print(rank);
-
+	near_entropic_rank(rank, valSeq);			
+	//std::vector<uint8_t> rgfSeq(SEQ_LEN);
+	//near_entropic_unrank(rank, rgfSeq);	
 	return 0;
 }
