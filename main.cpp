@@ -156,13 +156,6 @@ void near_entropic_rank(fmpz_t rank, std::vector<uint8_t>& valSeq) {
 		cout << "Comb Section Size: ";
 		fmpz_print(combSectionSize);
 		cout << endl;
-		//std::vector<uint8_t> cv = {1, 2, 3, 8, 12, 13, 14, 15};
-		//uint64_t cr = comb_rank(cv);
-		//std::vector<uint8_t> vals(k);
-		//std::vector<uint8_t> ucr = comb_unrank(vals, cr, MAX_SYM, 8);
-		//cout << "Comb Rank: " << cr << endl;
-		//cout << "Unrank: ";
-		//printVector(ucr);
 	}
 	
 	//  4. Add the Sym Perm Rank (Myrvold)	
@@ -241,7 +234,7 @@ void near_entropic_unrank(fmpz_t rank, std::vector<uint8_t>& rgfSeq) {
 	fmpz_tdiv_q(rankModStir, rankModStir, combSectionSize);
 	uint64_t combRank = fmpz_get_ui(rankModStir);
 	std::vector<uint8_t> combVals;
-	comb_unrank(combVals, combRank, MAX_SYM, symCount);
+	comb_unrank(combRank, MAX_SYM, symCount, combVals);
 	
 	if (DEBUG) {
 		cout << "Comb Rank: " << combRank << endl;
@@ -251,7 +244,7 @@ void near_entropic_unrank(fmpz_t rank, std::vector<uint8_t>& rgfSeq) {
 	fmpz_t symRank;
 	fmpz_mod(symRank, rank, combSectionSize);	
 	std::vector<uint8_t> symPerm(symCount);
-	myrvold_unrank(symPerm, symRank, symCount);		
+	myrvold_unrank(symPerm, symRank);		
 	
 	if (DEBUG) {
 		cout << "Sym Perm: ";

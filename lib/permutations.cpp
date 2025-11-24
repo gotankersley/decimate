@@ -55,9 +55,9 @@ void myrvold_unrank_recur(fmpz_t rank, int n, std::vector<uint8_t>& perm) {
 	
 }
 
-void myrvold_unrank(std::vector<uint8_t>& perm, fmpz_t rank, int permSize) {	
+void myrvold_unrank(std::vector<uint8_t>& perm, fmpz_t rank) {	
 	//Start with identity so that unranking can shuffle into place		
-	
+	int permSize = perm.size();
 	for (int i = 0; i < permSize; i++) {
 		perm[i] = i;
 	}

@@ -24,7 +24,7 @@ int main() {
 	int combs = comb(N, K);
 	for (int r = 0; r < combs; r++) {
 		std::vector<uint8_t> combVals(K);		
-		comb_unrank(combVals, r, N, K);
+		comb_unrank(r, N, K, combVals);
 		uint64_t rank = comb_rank(combVals);
 		assert(r == rank && "rank does not match!");
 		cout << "Unranking: " << r << endl;

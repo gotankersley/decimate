@@ -19,21 +19,21 @@ uint64_t comb(int n, int k) { //Binomial co-efficient of n-choose-k
 
 uint64_t comb_rank(std::vector<uint8_t>& vals) {
 	int k = vals.size();
-	uint64_t rank = 0;
+	uint64_t rankOut = 0;
 	
 	for (int i = 0; i < k; i++) {
-		rank += comb(vals[k-1-i], k-i);
+		rankOut += comb(vals[k-1-i], k-i);
 	}
-	return rank;
+	return rankOut;
 }
 
-void comb_unrank(std::vector<uint8_t>& vals, uint64_t rank, int n, int k) {	
+void comb_unrank(uint64_t rank, int n, int k, std::vector<uint8_t>& valsOut) {	
 	
 	for (int i = 0; i < k; i++) {
 		while (comb(n, k-i) > rank) {			
 			n--;
 		}
-		vals[k-i-1] = n;
+		valsOut[k-i-1] = n;
 		rank -= comb(n, k - i);
 	}	
 }
