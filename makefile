@@ -3,13 +3,13 @@ CXXFLAGS = -Wall -std=c++17 -I./lib
 LDFLAGS = -lflint # Library linking
 
 # --- Main Application Files ---
-SRCS = main.cpp lib/combinations.cpp lib/permutations.cpp lib/set_partitions.cpp
+SRCS = main.cpp lib/near_entropic.cpp lib/combinations.cpp lib/permutations.cpp lib/set_partitions.cpp
 OBJS = $(SRCS:.cpp=.o)
 TARGET = decimate
 
 # --- Test Files ---
 # Finds all .cpp files in the ./test/ directory
-TEST_SRCS = test/set_part_test.cpp
+TEST_SRCS = test/near_ent_test.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 TEST_TARGET = run_tests
 
