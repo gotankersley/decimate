@@ -1,3 +1,4 @@
 *.o
 decimate
 run_tests
+*.mat

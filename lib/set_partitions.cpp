@@ -36,13 +36,70 @@ void gen_rgf_table(int n, int k, fmpz_mat_t tableOut) {
 	//Don't forget to call fmpz_mat_clear(table);
 }
 
+void serialize_mat(const char* filename, fmpz_mat_t mat) {
+	FILE* file = fopen(filename, "w");
+    if (!file) {
+        perror("Could not open file for writing");
+        return;
+    }
+	
+	long rows = mat->r;
+	long cols = mat->c;	
+	
+	//Write dimensions
+	fwrite(&rows, sizeof(long), 1, file);
+	fwrite(&cols, sizeof(long), 1, file);
+	
+	//Write each element in raw binary format
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {			
+			fmpz_out_raw(file, fmpz_mat_entry( mat, i, j));			
+		}
+	}
+	fclose(file);	
+}
+
+void deserialize_mat(const char* filename, fmpz_mat_t mat) {
+	FILE* file = fopen(filename, "r");
+    if (!file) {
+        perror("Could not open file for reading");
+        return;
+    }
+	
+	long rows = mat->r;
+	long cols = mat->c;	
+
+	//Read dimensions
+	fread(&rows, sizeof(long), 1, file);
+	fread(&cols, sizeof(long), 1, file);
+	
+	//Init matrix
+	fmpz_mat_init(mat, rows, cols);
+	
+	for (int i = 0; i < rows; i++) {
+		for (int j = 0; j < cols; j++) {		
+			fmpz_inp_raw(fmpz_mat_entry( mat, i, j), file);			
+		}
+	}
+	
+	fclose(file);
+	//fmpz_mat_print_pretty(mat);
+}
+
 void rgf_rank(std::vector<uint8_t>& rgf, int k, fmpz_t rankOut) {
+	fmpz_mat_t table;
+	//gen_rgf_table(rgf.size(), k, table);
+	std::string filename = std::to_string(k) + ".mat";
+	deserialize_mat(filename.c_str() , table);	
+
+	rgf_rank_table(rgf, k, table, rankOut);
+	fmpz_mat_clear(table);
+}
+
+void rgf_rank_table(std::vector<uint8_t>& rgf, int k, fmpz_mat_t table, fmpz_t rankOut) {
 	// This calculates the rank of a set-partition with exactly k-parts
 	int n = rgf.size();
 	int currentMax = 1;
-	
-	fmpz_mat_t table;
-	gen_rgf_table(n, k, table);
 	
 	fmpz_zero(rankOut);
 	
@@ -69,15 +126,23 @@ void rgf_rank(std::vector<uint8_t>& rgf, int k, fmpz_t rankOut) {
 			fmpz_addmul_ui(rankOut, fmpz_mat_entry(table, remLen, currentMax), digit-1);
 			// currentMax does not change
 		}
-	}
-	fmpz_mat_clear(table);
+	}	
 }
 
 
 void rgf_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& rgfOut) {
-	//Converts a rank back into an RGF of length n with exactly k parts	
 	fmpz_mat_t table;
-	gen_rgf_table( n, k, table);
+	//gen_rgf_table(n, k, table);
+	std::string filename = std::to_string(k) + ".mat";
+	deserialize_mat(filename.c_str() , table);	
+	
+	rgf_unrank_table(rank, n, k, table, rgfOut);
+	fmpz_mat_clear(table);
+}
+void rgf_unrank_table(fmpz_t rank, int n, int k, fmpz_mat_t table, std::vector<uint8_t>& rgfOut) {
+	//Converts a rank back into an RGF of length n with exactly k parts	
+	//fmpz_mat_t table;
+	//gen_rgf_table( n, k, table);
 	rgfOut[0] = 1;
 	int currentMax = 1;
 	
@@ -108,5 +173,5 @@ void rgf_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& rgfOut) {
 			currentMax++;
 		}
 	}
-	fmpz_mat_clear(table);		
+	//fmpz_mat_clear(table);		
 }
