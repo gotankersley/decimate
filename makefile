@@ -1,6 +1,6 @@
-CXX = g++
+CXX = g++ #-O3
 CXXFLAGS = -Wall -std=c++17 -I./lib
-LDFLAGS = -lflint # Library linking
+LDFLAGS = -lflint #-lgmp -lgmpxx # Library linking
 
 # --- Main Application Files ---
 SRCS = main.cpp lib/near_entropic.cpp lib/combinations.cpp lib/permutations.cpp lib/set_partitions.cpp

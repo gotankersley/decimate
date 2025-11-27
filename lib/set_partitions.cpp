@@ -88,9 +88,9 @@ void deserialize_mat(const char* filename, fmpz_mat_t mat) {
 
 void rgf_rank(std::vector<uint8_t>& rgf, int k, fmpz_t rankOut) {
 	fmpz_mat_t table;
-	//gen_rgf_table(rgf.size(), k, table);
-	std::string filename = std::to_string(k) + ".mat";
-	deserialize_mat(filename.c_str() , table);	
+	gen_rgf_table(rgf.size(), k, table);
+	//std::string filename = std::to_string(k) + ".mat";
+	//deserialize_mat(filename.c_str() , table);	
 
 	rgf_rank_table(rgf, k, table, rankOut);
 	fmpz_mat_clear(table);
@@ -132,17 +132,16 @@ void rgf_rank_table(std::vector<uint8_t>& rgf, int k, fmpz_mat_t table, fmpz_t r
 
 void rgf_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& rgfOut) {
 	fmpz_mat_t table;
-	//gen_rgf_table(n, k, table);
-	std::string filename = std::to_string(k) + ".mat";
-	deserialize_mat(filename.c_str() , table);	
+	gen_rgf_table(n, k, table);
+	//std::string filename = std::to_string(k) + ".mat";
+	//deserialize_mat(filename.c_str() , table);	
 	
 	rgf_unrank_table(rank, n, k, table, rgfOut);
 	fmpz_mat_clear(table);
 }
 void rgf_unrank_table(fmpz_t rank, int n, int k, fmpz_mat_t table, std::vector<uint8_t>& rgfOut) {
 	//Converts a rank back into an RGF of length n with exactly k parts	
-	//fmpz_mat_t table;
-	//gen_rgf_table( n, k, table);
+
 	rgfOut[0] = 1;
 	int currentMax = 1;
 	
@@ -173,5 +172,5 @@ void rgf_unrank_table(fmpz_t rank, int n, int k, fmpz_mat_t table, std::vector<u
 			currentMax++;
 		}
 	}
-	//fmpz_mat_clear(table);		
+	
 }
