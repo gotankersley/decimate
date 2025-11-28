@@ -10,9 +10,8 @@
 using std::cout, std::endl;
 
 
-const int N = 4;
-const int K = 2;
-
+const int N = 5;
+const int K =3;
 
 
 void printVector(std::vector<uint8_t>& vals) {    
