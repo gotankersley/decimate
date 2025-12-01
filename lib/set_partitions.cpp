@@ -1,4 +1,5 @@
 #include "set_partitions.h"
+#include <iostream>
 
 void gen_rgf_table(int n, int k, fmpz_mat_t tableOut) {
 	//Generates a table where table[remLen][currentMax] stores the number of ways 
@@ -36,17 +37,16 @@ void gen_rgf_table(int n, int k, fmpz_mat_t tableOut) {
 	//Don't forget to call fmpz_mat_clear(table);
 }
 
-void gen_nth_row(int n, int k, uint8_t& CUR, fmpz_mat_t rowOut) {
-	//Computes only the N-th row of the Stirling table. 
-    //Note: We do this iteratively because we need a whole row, but
-	//the flint function "arith_stirling_number_2()" could be used instead
+void gen_rgf_row(int n, int k, uint8_t& CUR, fmpz_mat_t rowOut) {
+	//Computes only the N-th row of partial sums of the Stirling table
+    
 	fmpz_mat_init(rowOut, 2, k+2); //Two rows to swap to optimize memory allocation
 	fmpz_one(fmpz_mat_entry(rowOut, 0, k)); // Base case: length 0 is valid only if max is already k
-	//uint8_t CUR = 0;
+	
 	uint8_t NEXT = !CUR;
 	
 	for (int length = 1; length < (n+1); length++) {		
-		
+		if (length % 1000 == 0) std::cout << length << std::endl;
 		for (int m = 1; m < (k+1); m++) {
 			// Standard Recurrence: S(L, m) = m*S(L-1, m) + S(L-1, m+1)
 			fmpz_t product;
@@ -61,7 +61,60 @@ void gen_nth_row(int n, int k, uint8_t& CUR, fmpz_mat_t rowOut) {
 		CUR ^= NEXT;
 		NEXT ^= CUR;
 		CUR ^= NEXT;
+	}	
+}
+
+void gen_rgf_row2(int n, int k, fmpz_mat_t rowOut) {
+	//Note: This calculates an arbitrary starting row, which is signicantly quicker
+	//than calculating from the beginning
+	fmpz_mat_init(rowOut, 2, k+2); //Two rows to swap to optimize memory allocation
+	fmpz_one(fmpz_mat_entry(rowOut, 0, k)); // Base case: length 0 is valid only if max is already k
+	
+
+			
+	for (int m = 1; m < (k+1); m++) {
+		int level =(k+1)-m;
+		gen_rgf_cell(n, k, level, rowOut);
 	}
+}
+
+void gen_rgf_cell(int n, int k, int level, fmpz_mat_t rowOut) {
+	//Calculate arbitrary cell of RGF table
+	//Note: This can be used to calculate a starting row significantly
+	//quicker than calculating the whole table.  However, if the entire table
+	//needs to be used, (as in the case of ranking), the incremental approach is better.		
+	if (level >= k) {
+		fmpz_zero(fmpz_mat_entry(rowOut, 0, k-level));
+		return;
+	}
+	fmpz_t pascalWeight; //Treating Pascal Triangle like a lookup table of weights
+	fmpz_t power;
+	
+	fmpz_init (pascalWeight);
+	fmpz_init (power);
+	
+	for (int i = 0; i < level+1; i++) {
+		
+		fmpz_bin_uiui(pascalWeight, level, i);
+		if (i % 2 != 0) {
+			fmpz_mul_ui(pascalWeight, pascalWeight, -1);
+		}
+		fmpz_ui_pow_ui(power, k-i, n);
+		fmpz_addmul(fmpz_mat_entry(rowOut, 0, k-level), pascalWeight, power);
+		
+	}
+	fmpz_clear(pascalWeight);
+	fmpz_clear(power);
+	
+	fmpz_t factLevel;
+	fmpz_init(factLevel);
+	fmpz_fac_ui(factLevel, level);	
+	fmpz_tdiv_q(
+		fmpz_mat_entry(rowOut, 0, k-level), 
+		fmpz_mat_entry(rowOut, 0, k-level), 
+		factLevel
+	);
+	fmpz_clear(factLevel);
 }
 
 void serialize_mat(const char* filename, fmpz_mat_t mat) {
@@ -121,8 +174,8 @@ void rgf_rank(std::vector<uint8_t>& rgf, int k, fmpz_t rankOut) {
 	//deserialize_mat(filename.c_str() , table);	
 	fmpz_mat_t row;
 	uint8_t CUR = 0;	
-	gen_nth_row(rgf.size()-2, k, CUR, row);
-
+	gen_rgf_row(rgf.size()-2, k, CUR, row);
+	std::cout << "Finished rank gen" << std::endl;
 	rgf_rank_row(rgf, k, CUR, row, rankOut);
 	fmpz_mat_clear(row);
 }
@@ -176,10 +229,10 @@ void rgf_rank_row(std::vector<uint8_t>& rgf, int k, uint8_t CUR, fmpz_mat_t row,
     // At index i=1, the remaining length is (n-2).
     // We compute the row for length = n-2.
 	//fmpz_mat_t row;
-	//gen_nth_row(n-2, k, row);
+	//gen_rgf_row(n-2, k, row);
 	
 	//uint8_t CUR = 0;
-	uint8_t PREV = 1;
+	uint8_t PREV = !CUR;
     
 	int currentMax = 1;
 	
@@ -239,8 +292,9 @@ void rgf_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& rgfOut) {
 	
 	uint8_t CUR = 0;
 	fmpz_mat_t row;
-	gen_nth_row(n-1, k, CUR, row);
+	gen_rgf_row(n-1, k, CUR, row);
 	rgf_unrank_row(rank, n, k, CUR, row, rgfOut);
+	std::cout << "Finished unrank gen" << std::endl;
 	fmpz_mat_clear(row);
 }
 void rgf_unrank_table(fmpz_t rank, int n, int k, fmpz_mat_t table, std::vector<uint8_t>& rgfOut) {
@@ -249,6 +303,10 @@ void rgf_unrank_table(fmpz_t rank, int n, int k, fmpz_mat_t table, std::vector<u
 	rgfOut[0] = 1;
 	int currentMax = 1;
 	
+	fmpz_t countStay;
+	fmpz_t tVal;
+	fmpz_init(countStay);
+	fmpz_init(tVal);
 	for (int i = 1; i < n; i++) {
 		int remLen = n - 1 - i;
 		
@@ -256,16 +314,13 @@ void rgf_unrank_table(fmpz_t rank, int n, int k, fmpz_mat_t table, std::vector<u
 		fmpz_t weightStay;		
 		fmpz_set(weightStay, fmpz_mat_entry(table, remLen, currentMax));
 		
-		// Total possibilities covered by joining ANY existing block (1..currentMax)
-		fmpz_t countStay;
-		fmpz_init(countStay);
+		// Total possibilities covered by joining ANY existing block (1..currentMax)		
 		fmpz_mul_ui(countStay, weightStay, currentMax);
 		
 		if (fmpz_cmp(rank, countStay) < 0) {		
 			// The rank falls within the "join existing block" range.
 			// Determine exactly which block index (1..currentMax)
-			fmpz_t tVal;
-			fmpz_init(tVal);
+			
 			fmpz_tdiv_q(tVal, rank, weightStay);
 			int val = fmpz_get_ui(tVal) + 1;
 			rgfOut[i] = val;
@@ -278,8 +333,9 @@ void rgf_unrank_table(fmpz_t rank, int n, int k, fmpz_mat_t table, std::vector<u
 			fmpz_sub(rank, rank, countStay);			
 			currentMax++;
 		}		
-		fmpz_clear(countStay);
 	}
+	fmpz_clear(tVal);
+	fmpz_clear(countStay);
 	
 }
 
@@ -293,9 +349,14 @@ void rgf_unrank_row(fmpz_t rank, int n, int k, uint8_t CUR, fmpz_mat_t row, std:
 	
 	// This is the most expensive part: O(N*K) time, but only O(K) space.
 	//fmpz_mat_t row;
-	//gen_nth_row(n-1, k, row);
+	//gen_rgf_row(n-1, k, row);
 	
+	fmpz_t countStay;
+	fmpz_t tVal;
+	fmpz_init(countStay);
+	fmpz_init(tVal);
 	for (int i = 1; i < n; i++) {
+		if (i % 1000 == 0) std::cout << "Unrank: " << i << std::endl;
 		// Inverted Recurrence: S(L-1, m) = (S(L, m) - S(L-1, m+1)) / m
 		// We must iterate backwards (k -> 1) because we need prev_row[m+1]
 		for (int m = k; m > 0; m--) {
@@ -324,14 +385,14 @@ void rgf_unrank_row(fmpz_t rank, int n, int k, uint8_t CUR, fmpz_mat_t row, std:
 		fmpz_t weightStay;
 		fmpz_set(weightStay, fmpz_mat_entry(row, CUR, currentMax));
 		
-		fmpz_t countStay;
-		fmpz_init(countStay);
+		//fmpz_t countStay;
+		//fmpz_init(countStay);
 		fmpz_mul_ui(countStay, weightStay, currentMax);
 		
 		if (fmpz_cmp(rank, countStay) < 0) {	
 			// Stay with existing block
-			fmpz_t tVal;
-			fmpz_init(tVal);
+			//fmpz_t tVal;
+			//fmpz_init(tVal);
 			fmpz_tdiv_q(tVal, rank, weightStay);
 			int val = fmpz_get_ui(tVal) + 1;
 			rgfOut[i] = val;
@@ -344,8 +405,11 @@ void rgf_unrank_row(fmpz_t rank, int n, int k, uint8_t CUR, fmpz_mat_t row, std:
 			fmpz_sub(rank, rank, countStay);			
 			currentMax++;
 		}
-		fmpz_clear(countStay);
+		//fmpz_clear(countStay);
 		
 	}
-	//fmpz_mat_clear(row);
+	fmpz_clear(tVal);
+	fmpz_clear(countStay);
+	
+	
 }

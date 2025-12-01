@@ -11,13 +11,13 @@ using std::cout, std::endl;
 
 
 const int MAX_SYM = 5;
-const int SEQ_LEN = 4;
+const int SEQ_LEN = 3;
 
 int main() {
 		
 	uint64_t total = (uint64_t)pow(MAX_SYM, SEQ_LEN);
 	
-	for (uint64_t r = 0; r < total; r++) {	
+	for (uint64_t r = 0; r < total; r++) {		
 		fmpz_t bigR;
 		fmpz_init(bigR);
 		fmpz_set_si(bigR, r);	
@@ -36,6 +36,7 @@ int main() {
 		assert(fmpz_equal_si(entRank, r) && "rank does not match!");
 				
 		fmpz_clear(entRank);
+		
 	}
 		
 	

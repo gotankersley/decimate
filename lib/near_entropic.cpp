@@ -2,7 +2,7 @@
 using std::cout, std::endl;
 
 
-const bool DEBUG = false;
+const bool DEBUG = true;
 const int INVALID = -1;
 
 //Combinatorial function to count the ways to rank:
@@ -44,8 +44,7 @@ void near_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankOut
 	
 	//Pre-process file bits -> seq	
 	int seqLen = valSeq.size();
-	
-	//int valToSym[MAX_SYM]; //TODO - make std::array instead?
+		
 	std::vector<int> valToSym(maxSym); //Put val in get sym out
 	
 	for (int i = 0; i < maxSym; i++) {
@@ -246,7 +245,7 @@ void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<uint8
 		printVector(combVals);
 	}
 	
-	//  4. Add the Sym Perm Rank (Myrvold)	
+	//  4. Get the Sym Perm from Myrvold Rank	
 	fmpz_t symRank;
 	fmpz_init(symRank);
 	fmpz_mod(symRank, rank, combSectionSize);	
@@ -315,5 +314,5 @@ double measureEntropy(const std::vector<uint8_t>& seq, int maxSym) {
     // Apply negative sign and round to 2 decimal places
     // C++ standard round() rounds to nearest integer, so we multiply/divide by 100
     double result = -total_log_sum;
-    return std::round(result * 100.0) / 100.0;
+    return result;//std::round(result * 100.0) / 100.0;
 }
