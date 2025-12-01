@@ -37,7 +37,7 @@ void gen_rgf_table(int n, int k, fmpz_mat_t tableOut) {
 	//Don't forget to call fmpz_mat_clear(table);
 }
 
-void gen_rgf_row(int n, int k, uint8_t& CUR, fmpz_mat_t rowOut) {
+void gen_rgf_row_old(int n, int k, uint8_t& CUR, fmpz_mat_t rowOut) { //Deprecated
 	//Computes only the N-th row of partial sums of the Stirling table
     
 	fmpz_mat_init(rowOut, 2, k+2); //Two rows to swap to optimize memory allocation
@@ -64,7 +64,7 @@ void gen_rgf_row(int n, int k, uint8_t& CUR, fmpz_mat_t rowOut) {
 	}	
 }
 
-void gen_rgf_row2(int n, int k, fmpz_mat_t rowOut) {
+void gen_rgf_row(int n, int k, fmpz_mat_t rowOut) {
 	//Note: This calculates an arbitrary starting row, which is signicantly quicker
 	//than calculating from the beginning
 	fmpz_mat_init(rowOut, 2, k+2); //Two rows to swap to optimize memory allocation	
@@ -79,7 +79,7 @@ void gen_rgf_cell(int n, int k, int level, fmpz_mat_t rowOut) {
 	//Calculate arbitrary cell of RGF table
 	//Note: This can be used to calculate a starting row significantly
 	//quicker than calculating the whole table.  However, if the entire table
-	//needs to be used, (as in the case of ranking), the incremental approach is better.		
+	//needs to be used, (as in the case of ranking), the incremental approach probably is better.		
 	int col = k-level;
 	uint8_t CUR = 0;
 	fmpz_zero(fmpz_mat_entry(rowOut, CUR, col));
@@ -118,6 +118,7 @@ void gen_rgf_cell(int n, int k, int level, fmpz_mat_t rowOut) {
 	fmpz_clear(factLevel);
 }
 
+/*
 void serialize_mat(const char* filename, fmpz_mat_t mat) {
 	FILE* file = fopen(filename, "w");
     if (!file) {
@@ -167,16 +168,16 @@ void deserialize_mat(const char* filename, fmpz_mat_t mat) {
 	fclose(file);
 	//fmpz_mat_print_pretty(mat);
 }
+*/
 
 void rgf_rank(std::vector<uint8_t>& rgf, int k, fmpz_t rankOut) {
-	//fmpz_mat_t table;
-	//gen_rgf_table(rgf.size(), k, table);
-	//std::string filename = std::to_string(k) + ".mat";
-	//deserialize_mat(filename.c_str() , table);	
-	fmpz_mat_t row;
 	
-	//gen_rgf_row(rgf.size()-2, k, CUR, row);
-	gen_rgf_row2(rgf.size()-2, k, row);
+		
+	// Get the starting row:
+    // At index i=1, the remaining length is (n-2).
+    // We compute the row for length = n-2.
+	fmpz_mat_t row;
+	gen_rgf_row(rgf.size()-2, k, row);
 	std::cout << "Finished rank gen" << std::endl;
 	rgf_rank_row(rgf, k, row, rankOut);
 	fmpz_mat_clear(row);
@@ -227,11 +228,6 @@ void rgf_rank_row(std::vector<uint8_t>& rgf, int k, fmpz_mat_t row, fmpz_t rankO
 	fmpz_zero(rankOut);
 	if (n <= 1) return;
 	
-	// Get the starting row:
-    // At index i=1, the remaining length is (n-2).
-    // We compute the row for length = n-2.
-	//fmpz_mat_t row;
-	//gen_rgf_row(n-2, k, row);
 	
 	uint8_t CUR = 0;
 	uint8_t PREV = 1;
@@ -272,8 +268,8 @@ void rgf_rank_row(std::vector<uint8_t>& rgf, int k, fmpz_mat_t row, fmpz_t rankO
 					fmpz_mat_entry(row, PREV, m),
 					m
 				);  
-				//Note: The ranking could potentially be done in reverse,
-				//and allow the minor optimization of multiplication, instead of division.
+				//Note: The ranking can potentially be done in reverse,
+				//which allows the minor optimization of multiplication, instead of division.
 				//However, this is ONLY for ranking, as the unranking can not be done in reverse
 			}
 			
@@ -282,19 +278,12 @@ void rgf_rank_row(std::vector<uint8_t>& rgf, int k, fmpz_mat_t row, fmpz_t rankO
 			PREV ^= CUR;
 			CUR ^= PREV;			
 		}
-	}
-	//fmpz_mat_clear(row);
+	}	
 }
 
-void rgf_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& rgfOut) {
-	//gen_rgf_table(n, k, table);
-	//std::string filename = std::to_string(k) + ".mat";
-	//deserialize_mat(filename.c_str() , table);	
-	
-	
-	fmpz_mat_t row;
-	//gen_rgf_row(n-1, k, CUR, row);
-	gen_rgf_row2(n-1, k, row);
+void rgf_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& rgfOut) {		
+	fmpz_mat_t row;	
+	gen_rgf_row(n-1, k, row);
 	rgf_unrank_row(rank, n, k, row, rgfOut);
 	std::cout << "Finished unrank gen" << std::endl;
 	fmpz_mat_clear(row);
@@ -349,10 +338,6 @@ void rgf_unrank_row(fmpz_t rank, int n, int k, fmpz_mat_t row, std::vector<uint8
 	uint8_t CUR = 0;
 	uint8_t PREV = 1;
 	
-	// This is the most expensive part: O(N*K) time, but only O(K) space.
-	//fmpz_mat_t row;
-	//gen_rgf_row(n-1, k, row);
-	
 	fmpz_t countStay;
 	fmpz_t tVal;
 	fmpz_init(countStay);
@@ -387,14 +372,10 @@ void rgf_unrank_row(fmpz_t rank, int n, int k, fmpz_mat_t row, std::vector<uint8
 		fmpz_t weightStay;
 		fmpz_set(weightStay, fmpz_mat_entry(row, CUR, currentMax));
 		
-		//fmpz_t countStay;
-		//fmpz_init(countStay);
 		fmpz_mul_ui(countStay, weightStay, currentMax);
 		
 		if (fmpz_cmp(rank, countStay) < 0) {	
 			// Stay with existing block
-			//fmpz_t tVal;
-			//fmpz_init(tVal);
 			fmpz_tdiv_q(tVal, rank, weightStay);
 			int val = fmpz_get_ui(tVal) + 1;
 			rgfOut[i] = val;
@@ -406,8 +387,7 @@ void rgf_unrank_row(fmpz_t rank, int n, int k, fmpz_mat_t row, std::vector<uint8
 			rgfOut[i] = currentMax + 1;
 			fmpz_sub(rank, rank, countStay);			
 			currentMax++;
-		}
-		//fmpz_clear(countStay);
+		}		
 		
 	}
 	fmpz_clear(tVal);

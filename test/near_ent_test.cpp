@@ -21,7 +21,7 @@ int main() {
 	for (uint64_t r = 0; r < total; r++) {		
 		fmpz_t bigR;
 		fmpz_init(bigR);
-		fmpz_set_si(bigR, r);	
+		fmpz_set_ui(bigR, r);	
 				
 		std::vector<uint8_t> seq(SEQ_LEN);
 		near_entropic_unrank(bigR, SEQ_LEN, MAX_SYM, seq);	
@@ -34,7 +34,7 @@ int main() {
 		fmpz_init(entRank);
 		near_entropic_rank(seq, MAX_SYM, entRank);
 		
-		assert(fmpz_equal_si(entRank, r) && "rank does not match!");
+		assert(fmpz_equal_ui(entRank, r) && "rank does not match!");
 				
 		fmpz_clear(entRank);
 		

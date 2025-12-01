@@ -40,7 +40,7 @@ int main() {
 	for (uint64_t r = 0; r < fact; r++) {	
 		fmpz_t bigR;
 		fmpz_init(bigR);
-		fmpz_set_si(bigR, r);						
+		fmpz_set_ui(bigR, r);						
 		std::vector<uint8_t> perm(P);
 		myrvold_unrank(bigR, perm);
 		fmpz_clear(bigR);
@@ -52,7 +52,7 @@ int main() {
 		fmpz_init(rank);
 		myrvold_rank(perm, rank);				
 		
-		assert(fmpz_equal_si(rank, r) && "rank does not match!");
+		assert(fmpz_equal_ui(rank, r) && "rank does not match!");
 		
 		
 		fmpz_clear(rank);

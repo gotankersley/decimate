@@ -27,13 +27,13 @@ int main() {
 	fmpz_t bigStir;
 	fmpz_init(bigStir);
 	arith_stirling_number_2(bigStir, N, K);
-	uint64_t stir2 = fmpz_get_si(bigStir);
+	uint64_t stir2 = fmpz_get_ui(bigStir);
 	fmpz_clear(bigStir);
 	
 	for (uint64_t r = 0; r < stir2; r++) {	
 		fmpz_t stirRank;
 		fmpz_init(stirRank);
-		fmpz_set_si(stirRank, r);
+		fmpz_set_ui(stirRank, r);
 		
 		std::vector<uint8_t> rgfSeq(N);
 		rgf_unrank(stirRank, N, K, rgfSeq);	
@@ -46,7 +46,7 @@ int main() {
 		fmpz_init(rank);
 		rgf_rank(rgfSeq, K, rank);				
 		
-		assert(fmpz_equal_si(rank, r) && "rank does not match!");				
+		assert(fmpz_equal_ui(rank, r) && "rank does not match!");				
 		fmpz_clear(rank);
 	}
 		

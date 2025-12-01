@@ -8,12 +8,12 @@
 #include "flint/arith.h"
 
 void gen_rgf_table(int n, int k, fmpz_mat_t tableOut);
-void gen_rgf_row(int n, int k, uint8_t& CUR, fmpz_mat_t rowOut); //TODO - make CUR less hacky
-void gen_rgf_row2(int n, int k, fmpz_mat_t rowOut); 
+void gen_rgf_row_old(int n, int k, uint8_t& CUR, fmpz_mat_t rowOut); //DEPRECATED
+void gen_rgf_row(int n, int k, fmpz_mat_t rowOut); 
 void gen_rgf_cell(int n, int k, int level, fmpz_mat_t rowOut); 
 	
-void serialize_mat(const char* filename, fmpz_mat_t mat);
-void deserialize_mat(const char* filename, fmpz_mat_t mat); 
+//void serialize_mat(const char* filename, fmpz_mat_t mat);
+//void deserialize_mat(const char* filename, fmpz_mat_t mat); 
 
 void rgf_rank(std::vector<uint8_t>& rgf, int k, fmpz_t rankOut);
 void rgf_rank_table(std::vector<uint8_t>& rgf, int k, fmpz_mat_t table, fmpz_t rankOut); //Use Precomputed Table

@@ -25,7 +25,7 @@ void addSymbolSection(fmpz_t rank, int seqLen, int maxSym, int k) {
 	fmpz_t product;
 	fmpz_init(product);
 	fmpz_mul(product, factorialK, stir2);	
-	fmpz_addmul_si(rank, product, combinations);
+	fmpz_addmul_ui(rank, product, combinations);
 	
 	fmpz_clear(factorialK);
 	fmpz_clear(stir2);
@@ -113,7 +113,7 @@ void near_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankOut
 	
 	fmpz_t stirSectionSize;
 	fmpz_init(stirSectionSize);
-	fmpz_mul_si(stirSectionSize, combSectionSize, totalComb);
+	fmpz_mul_ui(stirSectionSize, combSectionSize, totalComb);
 	
 	if (DEBUG) {
 		cout << "Comb Section Size: " << endl;
@@ -140,7 +140,7 @@ void near_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankOut
 	
 	//  3. Add the combination rank 
 	uint64_t combRank = comb_rank(vals);	
-	fmpz_addmul_si(rankOut, combSectionSize, combRank);
+	fmpz_addmul_ui(rankOut, combSectionSize, combRank);
 	if (DEBUG) {
 		cout << "Comb Rank: " << combRank << endl;		
 		cout << "Comb Vals: ";
@@ -217,7 +217,7 @@ void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<uint8
 	
 	fmpz_t stirSectionSize;
 	fmpz_init(stirSectionSize);
-	fmpz_mul_si(stirSectionSize, combSectionSize, totalComb);
+	fmpz_mul_ui(stirSectionSize, combSectionSize, totalComb);
 	
 
 	if (DEBUG) {
