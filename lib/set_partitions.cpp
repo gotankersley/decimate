@@ -174,11 +174,11 @@ void rgf_rank(std::vector<uint8_t>& rgf, int k, fmpz_t rankOut) {
 	//std::string filename = std::to_string(k) + ".mat";
 	//deserialize_mat(filename.c_str() , table);	
 	fmpz_mat_t row;
-	uint8_t CUR = 0;	
+	
 	//gen_rgf_row(rgf.size()-2, k, CUR, row);
 	gen_rgf_row2(rgf.size()-2, k, row);
 	std::cout << "Finished rank gen" << std::endl;
-	rgf_rank_row(rgf, k, CUR, row, rankOut);
+	rgf_rank_row(rgf, k, row, rankOut);
 	fmpz_mat_clear(row);
 }
 
@@ -218,7 +218,7 @@ void rgf_rank_table(std::vector<uint8_t>& rgf, int k, fmpz_mat_t table, fmpz_t r
 }
 
 
-void rgf_rank_row(std::vector<uint8_t>& rgf, int k, uint8_t CUR, fmpz_mat_t row, fmpz_t rankOut) {
+void rgf_rank_row(std::vector<uint8_t>& rgf, int k, fmpz_mat_t row, fmpz_t rankOut) {
 	//Ranks an RGF forward (index 1 -> n) using only O(k) space
     //by mathematically inverting the Stirling recurrence at each step.
 	//NOTE: row is actually two rows - current and previous and we swap 
@@ -233,8 +233,8 @@ void rgf_rank_row(std::vector<uint8_t>& rgf, int k, uint8_t CUR, fmpz_mat_t row,
 	//fmpz_mat_t row;
 	//gen_rgf_row(n-2, k, row);
 	
-	//uint8_t CUR = 0;
-	uint8_t PREV = !CUR;
+	uint8_t CUR = 0;
+	uint8_t PREV = 1;
     
 	int currentMax = 1;
 	
@@ -286,17 +286,16 @@ void rgf_rank_row(std::vector<uint8_t>& rgf, int k, uint8_t CUR, fmpz_mat_t row,
 	//fmpz_mat_clear(row);
 }
 
-
 void rgf_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& rgfOut) {
 	//gen_rgf_table(n, k, table);
 	//std::string filename = std::to_string(k) + ".mat";
 	//deserialize_mat(filename.c_str() , table);	
 	
-	uint8_t CUR = 0;
+	
 	fmpz_mat_t row;
 	//gen_rgf_row(n-1, k, CUR, row);
 	gen_rgf_row2(n-1, k, row);
-	rgf_unrank_row(rank, n, k, CUR, row, rgfOut);
+	rgf_unrank_row(rank, n, k, row, rgfOut);
 	std::cout << "Finished unrank gen" << std::endl;
 	fmpz_mat_clear(row);
 }
@@ -342,13 +341,13 @@ void rgf_unrank_table(fmpz_t rank, int n, int k, fmpz_mat_t table, std::vector<u
 	
 }
 
-void rgf_unrank_row(fmpz_t rank, int n, int k, uint8_t CUR, fmpz_mat_t row, std::vector<uint8_t>& rgfOut) {
+void rgf_unrank_row(fmpz_t rank, int n, int k, fmpz_mat_t row, std::vector<uint8_t>& rgfOut) {
 	//Unranks an RGF using O(K) space by inverting the Stirling recurrence on the fly.
 
 	rgfOut[0] = 1;
 	int currentMax = 1;
-	//uint8_t CUR = 0;
-	uint8_t PREV = !CUR;
+	uint8_t CUR = 0;
+	uint8_t PREV = 1;
 	
 	// This is the most expensive part: O(N*K) time, but only O(K) space.
 	//fmpz_mat_t row;

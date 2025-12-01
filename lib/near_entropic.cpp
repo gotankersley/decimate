@@ -115,6 +115,15 @@ void near_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankOut
 	fmpz_init(stirSectionSize);
 	fmpz_mul_si(stirSectionSize, combSectionSize, totalComb);
 	
+	if (DEBUG) {
+		cout << "Comb Section Size: " << endl;
+		fmpz_print(combSectionSize);
+		cout << endl;
+		cout << "Stir Section Size: " << endl;
+		fmpz_print(stirSectionSize);
+		cout << endl;
+	}
+	
 	//  2. Add Set Partition / Stirling2 rank 		
 	fmpz_t stirRank;
 	fmpz_init(stirRank);		
@@ -211,23 +220,16 @@ void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<uint8
 	fmpz_mul_si(stirSectionSize, combSectionSize, totalComb);
 	
 
-	// 2. Get the Set Partition from Stirling2 rank		
-	fmpz_t stirRank;
-	fmpz_init(stirRank);
-	fmpz_tdiv_q(stirRank, rank, stirSectionSize);
 	if (DEBUG) {
-		cout << "Stir Rank: " << endl;
-		fmpz_print(stirRank);
-		cout << endl;					
+		cout << "Comb Section Size: " << endl;
+		fmpz_print(combSectionSize);
+		cout << endl;
+		cout << "Stir Section Size: " << endl;
+		fmpz_print(stirSectionSize);
+		cout << endl;
 	}
-	rgf_unrank(stirRank, seqLen, symCount, rgfOut);		
-	fmpz_clear(stirRank);
-	if (DEBUG) {
-		cout << "RGF Seq: ";
-		printVector(rgfOut);	
-	}
-	
-	// 3. Get the values from the combination rank of symbols
+
+	// 2. Get the values from the combination rank of symbols
 	fmpz_t rankModStir;	
 	fmpz_init(rankModStir);	
 	fmpz_mod(rankModStir, rank, stirSectionSize);		
@@ -245,7 +247,7 @@ void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<uint8
 		printVector(combVals);
 	}
 	
-	//  4. Get the Sym Perm from Myrvold Rank	
+	//  3. Get the Sym Perm from Myrvold Rank	
 	fmpz_t symRank;
 	fmpz_init(symRank);
 	fmpz_mod(symRank, rank, combSectionSize);	
@@ -262,6 +264,24 @@ void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<uint8
 		cout << "Sym Perm: ";
 		printVector(symPerm);		
 	}
+
+	// 4. Get the Set Partition from Stirling2 rank		
+	fmpz_t stirRank;
+	fmpz_init(stirRank);
+	fmpz_tdiv_q(stirRank, rank, stirSectionSize);
+	if (DEBUG) {
+		cout << "Stir Rank: " << endl;
+		fmpz_print(stirRank);
+		cout << endl;					
+	}
+	rgf_unrank(stirRank, seqLen, symCount, rgfOut);		
+	fmpz_clear(stirRank);
+	if (DEBUG) {
+		cout << "RGF Seq: ";
+		printVector(rgfOut);	
+	}
+	
+	
 	
 	// Apply inverse perm to recreate seq	
 	std::vector<uint8_t> invPerm(symCount);

@@ -14,9 +14,9 @@ using std::cout, std::endl;
 
 
 
-const int SEQ_LEN = 501;
+const int SEQ_LEN = 16;//10000;
 const int MAX_SYM = 16;
-const int K_SHAPING = 1;
+const int K_SHAPING = 4;
 
 void b2n(std::vector<uint8_t>& digits, int base, fmpz_t nOut) {
 	fmpz_zero(nOut);
