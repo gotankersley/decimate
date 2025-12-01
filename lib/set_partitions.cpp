@@ -67,14 +67,11 @@ void gen_rgf_row(int n, int k, uint8_t& CUR, fmpz_mat_t rowOut) {
 void gen_rgf_row2(int n, int k, fmpz_mat_t rowOut) {
 	//Note: This calculates an arbitrary starting row, which is signicantly quicker
 	//than calculating from the beginning
-	fmpz_mat_init(rowOut, 2, k+2); //Two rows to swap to optimize memory allocation
-	fmpz_one(fmpz_mat_entry(rowOut, 0, k)); // Base case: length 0 is valid only if max is already k
-	
-
+	fmpz_mat_init(rowOut, 2, k+2); //Two rows to swap to optimize memory allocation	
 			
 	for (int m = 1; m < (k+1); m++) {
-		int level =(k+1)-m;
-		gen_rgf_cell(n, k, level, rowOut);
+		int level = m-1;
+		gen_rgf_cell(n, k, level, rowOut);	
 	}
 }
 
@@ -83,10 +80,12 @@ void gen_rgf_cell(int n, int k, int level, fmpz_mat_t rowOut) {
 	//Note: This can be used to calculate a starting row significantly
 	//quicker than calculating the whole table.  However, if the entire table
 	//needs to be used, (as in the case of ranking), the incremental approach is better.		
-	if (level >= k) {
-		fmpz_zero(fmpz_mat_entry(rowOut, 0, k-level));
-		return;
-	}
+	int col = k-level;
+	uint8_t CUR = 0;
+	fmpz_zero(fmpz_mat_entry(rowOut, CUR, col));
+	if (level >= k) return;
+		
+	
 	fmpz_t pascalWeight; //Treating Pascal Triangle like a lookup table of weights
 	fmpz_t power;
 	
@@ -96,11 +95,13 @@ void gen_rgf_cell(int n, int k, int level, fmpz_mat_t rowOut) {
 	for (int i = 0; i < level+1; i++) {
 		
 		fmpz_bin_uiui(pascalWeight, level, i);
+		
 		if (i % 2 != 0) {
-			fmpz_mul_ui(pascalWeight, pascalWeight, -1);
+			fmpz_mul_si(pascalWeight, pascalWeight, -1);
 		}
+		
 		fmpz_ui_pow_ui(power, k-i, n);
-		fmpz_addmul(fmpz_mat_entry(rowOut, 0, k-level), pascalWeight, power);
+		fmpz_addmul(fmpz_mat_entry(rowOut, CUR, col), pascalWeight, power);
 		
 	}
 	fmpz_clear(pascalWeight);
@@ -110,8 +111,8 @@ void gen_rgf_cell(int n, int k, int level, fmpz_mat_t rowOut) {
 	fmpz_init(factLevel);
 	fmpz_fac_ui(factLevel, level);	
 	fmpz_tdiv_q(
-		fmpz_mat_entry(rowOut, 0, k-level), 
-		fmpz_mat_entry(rowOut, 0, k-level), 
+		fmpz_mat_entry(rowOut, CUR, col), 
+		fmpz_mat_entry(rowOut, CUR, col), 
 		factLevel
 	);
 	fmpz_clear(factLevel);
@@ -174,7 +175,8 @@ void rgf_rank(std::vector<uint8_t>& rgf, int k, fmpz_t rankOut) {
 	//deserialize_mat(filename.c_str() , table);	
 	fmpz_mat_t row;
 	uint8_t CUR = 0;	
-	gen_rgf_row(rgf.size()-2, k, CUR, row);
+	//gen_rgf_row(rgf.size()-2, k, CUR, row);
+	gen_rgf_row2(rgf.size()-2, k, row);
 	std::cout << "Finished rank gen" << std::endl;
 	rgf_rank_row(rgf, k, CUR, row, rankOut);
 	fmpz_mat_clear(row);
@@ -292,7 +294,8 @@ void rgf_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& rgfOut) {
 	
 	uint8_t CUR = 0;
 	fmpz_mat_t row;
-	gen_rgf_row(n-1, k, CUR, row);
+	//gen_rgf_row(n-1, k, CUR, row);
+	gen_rgf_row2(n-1, k, row);
 	rgf_unrank_row(rank, n, k, CUR, row, rgfOut);
 	std::cout << "Finished unrank gen" << std::endl;
 	fmpz_mat_clear(row);

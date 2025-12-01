@@ -2,7 +2,7 @@
 using std::cout, std::endl;
 
 
-const bool DEBUG = true;
+const bool DEBUG = false;
 const int INVALID = -1;
 
 //Combinatorial function to count the ways to rank:

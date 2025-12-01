@@ -17,6 +17,7 @@ int main() {
 		
 	uint64_t total = (uint64_t)pow(MAX_SYM, SEQ_LEN);
 	
+	
 	for (uint64_t r = 0; r < total; r++) {		
 		fmpz_t bigR;
 		fmpz_init(bigR);
@@ -38,6 +39,7 @@ int main() {
 		fmpz_clear(entRank);
 		
 	}
+	
 		
 	
 	return 0;
