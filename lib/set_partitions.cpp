@@ -259,7 +259,7 @@ void rgf_rank_row(std::vector<uint8_t>& rgf, int k, uint8_t CUR, fmpz_mat_t row,
 		if (i < n - 1) {
 			// Inverted Recurrence: S(L-1, m) = (S(L, m) - S(L-1, m+1)) / m
             // We must iterate backwards (k -> 1) because we need prev_row[m+1]
-            for (int m = k; m > 0; m--) {
+            for (int m = k; m >= currentMax; m--) {
 
                 // Always divides evenly
 				fmpz_sub(
@@ -362,7 +362,7 @@ void rgf_unrank_row(fmpz_t rank, int n, int k, uint8_t CUR, fmpz_mat_t row, std:
 		if (i % 1000 == 0) std::cout << "Unrank: " << i << std::endl;
 		// Inverted Recurrence: S(L-1, m) = (S(L, m) - S(L-1, m+1)) / m
 		// We must iterate backwards (k -> 1) because we need prev_row[m+1]
-		for (int m = k; m > 0; m--) {
+		for (int m = k; m >= currentMax; m--) {
 
 			// Always divides evenly
 			fmpz_sub(
