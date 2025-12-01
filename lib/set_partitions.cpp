@@ -169,19 +169,17 @@ void deserialize_mat(const char* filename, fmpz_mat_t mat) {
 	//fmpz_mat_print_pretty(mat);
 }
 */
-
 void rgf_rank(std::vector<uint8_t>& rgf, int k, fmpz_t rankOut) {
-	
 		
 	// Get the starting row:
     // At index i=1, the remaining length is (n-2).
     // We compute the row for length = n-2.
 	fmpz_mat_t row;
-	gen_rgf_row(rgf.size()-2, k, row);
-	std::cout << "Finished rank gen" << std::endl;
+	gen_rgf_row(rgf.size()-2, k, row);	
 	rgf_rank_row(rgf, k, row, rankOut);
 	fmpz_mat_clear(row);
 }
+
 
 void rgf_rank_table(std::vector<uint8_t>& rgf, int k, fmpz_mat_t table, fmpz_t rankOut) {
 	// This calculates the rank of a set-partition with exactly k-parts
@@ -285,7 +283,13 @@ void rgf_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& rgfOut) {
 	fmpz_mat_t row;	
 	gen_rgf_row(n-1, k, row);
 	rgf_unrank_row(rank, n, k, row, rgfOut);
-	std::cout << "Finished unrank gen" << std::endl;
+	//std::cout << "Finished unrank gen" << std::endl;
+	fmpz_mat_clear(row);
+}
+void rgf_unrank_opt(fmpz_t rank, int n, int k, std::vector<uint8_t>& combVals, std::vector<uint8_t>& invPerm, std::vector<int>& countsOut, std::vector<uint8_t>& rgfOut) {
+	fmpz_mat_t row;	
+	gen_rgf_row(n-1, k, row);
+	rgf_unrank_row_opt(rank, n, k, row, combVals, invPerm, countsOut, rgfOut);	
 	fmpz_mat_clear(row);
 }
 void rgf_unrank_table(fmpz_t rank, int n, int k, fmpz_mat_t table, std::vector<uint8_t>& rgfOut) {
@@ -391,7 +395,80 @@ void rgf_unrank_row(fmpz_t rank, int n, int k, fmpz_mat_t row, std::vector<uint8
 		
 	}
 	fmpz_clear(tVal);
-	fmpz_clear(countStay);
+	fmpz_clear(countStay);	
+}
+
+void rgf_unrank_row_opt(fmpz_t rank, int n, int k, fmpz_mat_t row, std::vector<uint8_t>& combVals, std::vector<uint8_t>& invPerm, std::vector<int>& countsOut, std::vector<uint8_t>& rgfOut) {
+	//Unranks an RGF using O(K) space by inverting the Stirling recurrence on the fly.
+
+	rgfOut[0] = 1;
+	int currentMax = 1;
+	uint8_t CUR = 0;
+	uint8_t PREV = 1;
 	
+	fmpz_t countStay;
+	fmpz_t tVal;
+	fmpz_init(countStay);
+	fmpz_init(tVal);
+	for (int i = 1; i < n; i++) {
+		if (i % 1000 == 0) std::cout << "Unrank: " << i << std::endl;
+		// Inverted Recurrence: S(L-1, m) = (S(L, m) - S(L-1, m+1)) / m
+		// We must iterate backwards (k -> 1) because we need prev_row[m+1]
+		for (int m = k; m >= currentMax; m--) {
+
+			// Always divides evenly
+			fmpz_sub(
+				fmpz_mat_entry(row, PREV, m),				
+				fmpz_mat_entry(row, CUR, m),				
+				fmpz_mat_entry(row, PREV, m+1)
+			);
+			fmpz_tdiv_q_ui(
+				fmpz_mat_entry(row, PREV, m), 
+				fmpz_mat_entry(row, PREV, m),
+				m
+			);                
+		}
+		
+		//Swap
+		CUR ^= PREV;
+		PREV ^= CUR;
+		CUR ^= PREV;
+
+		// Now current row corresponds to the correct 'rem_len' for this part
+		
+		// Calculate the "weight" (number of possibilities) if we join an existing block
+		fmpz_t weightStay;
+		fmpz_set(weightStay, fmpz_mat_entry(row, CUR, currentMax));
+		
+		fmpz_mul_ui(countStay, weightStay, currentMax);
+		
+		if (fmpz_cmp(rank, countStay) < 0) {	
+			// Stay with existing block
+			fmpz_tdiv_q(tVal, rank, weightStay);
+			int val = fmpz_get_ui(tVal) + 1;
+			rgfOut[i] = val;
+			fmpz_clear(tVal);
+			fmpz_mod(rank, rank, weightStay);
+		}
+		else {
+			// Create new block
+			rgfOut[i] = currentMax + 1;
+			fmpz_sub(rank, rank, countStay);			
+			currentMax++;
+		}		
+		
+		//Optimization - apply values here so we don't have to do another loop over the sequence
+		uint8_t sym = rgfOut[i]-1;
+		uint8_t combVal = combVals[invPerm[sym]];
+		rgfOut[i] = combVal;
+		countsOut[sym]++;
+	}
+	fmpz_clear(tVal);
+	fmpz_clear(countStay);	
 	
+	//First value special case
+	uint8_t sym = rgfOut[0]-1;
+	uint8_t val = combVals[invPerm[sym]];
+	rgfOut[0] = val;
+	countsOut[sym]++;
 }

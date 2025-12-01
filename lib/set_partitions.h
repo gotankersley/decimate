@@ -21,5 +21,7 @@ void rgf_rank_row(std::vector<uint8_t>& rgf, int k, fmpz_mat_t row, fmpz_t rankO
 
 
 void rgf_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& rgfOut);
+void rgf_unrank_opt(fmpz_t rank, int n, int k, std::vector<uint8_t>& combVals, std::vector<uint8_t>& invPerm, std::vector<int>& countsOut, std::vector<uint8_t>& rgfOut);
 void rgf_unrank_table(fmpz_t rank, int n, int k, fmpz_mat_t table, std::vector<uint8_t>& rgfOut);
 void rgf_unrank_row(fmpz_t rank, int n, int k, fmpz_mat_t row, std::vector<uint8_t>& rgfOut);
+void rgf_unrank_row_opt(fmpz_t rank, int n, int k, fmpz_mat_t row, std::vector<uint8_t>& combVals, std::vector<uint8_t>& invPerm, std::vector<int>& countsOut, std::vector<uint8_t>& rgfOut);

@@ -2,7 +2,7 @@
 using std::cout, std::endl;
 
 
-const bool DEBUG = false;
+const bool DEBUG = true;
 const int INVALID = -1;
 
 //Combinatorial function to count the ways to rank:
@@ -36,13 +36,9 @@ void addSymbolSection(fmpz_t rank, int seqLen, int maxSym, int k) {
 
 void near_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankOut) {
 			
+		
 	
-	if (DEBUG) {
-		cout << "Ranking: ";		
-		printVector(valSeq);
-	}
-	
-	//Pre-process file bits -> seq	
+	//Pre-process seq	
 	int seqLen = valSeq.size();
 		
 	std::vector<int> valToSym(maxSym); //Put val in get sym out
@@ -53,8 +49,8 @@ void near_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankOut
 
 	std::vector<uint8_t> rgfSeq(seqLen);
 		
-	int symCount = INVALID;
-	//Loop read in files as i16
+	std::vector<int> counts(maxSym);
+	int symCount = INVALID;	 
 	for (int i = 0; i < seqLen; i++){
 		uint8_t val = valSeq[i];
 		uint8_t sym;
@@ -62,13 +58,20 @@ void near_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankOut
 		if (valToSym[val] == INVALID) { //First time this symbol has been seen		
 			symCount++;
 			valToSym[val] = symCount;
-			sym = symCount;						
+			sym = symCount;	
+			counts[sym]++;
 		}
 		else sym = valToSym[val];
 		
 		rgfSeq[i] = sym + 1; //RGF is 1-indexed			
 	}
 	symCount++; //So that it reflects the total properly 
+	
+	if (DEBUG) {
+		cout << "Ranking: ";		
+		printVector(valSeq);
+		cout << "Entropy of Seq: "<< std::fixed << std::setprecision(2) << measureEntropy(counts, seqLen) << endl;
+	}
 	
 	//Permutation of symbols -> vals
 	std::vector<uint8_t> vals;
@@ -260,12 +263,18 @@ void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<uint8
 	myrvold_unrank(symRank, symPerm);
 	fmpz_clear(symRank);
 	fmpz_clear(combSectionSize);
+	std::vector<uint8_t> invPerm(symCount);
+	for (int i = 0; i < symCount; i++) {
+		invPerm[symPerm[i]] = i;
+	}
+	
 	if (DEBUG) {
 		cout << "Sym Perm: ";
 		printVector(symPerm);		
 	}
 
 	// 4. Get the Set Partition from Stirling2 rank		
+	// Note: We're also applying inverse perm to recreate seq	
 	fmpz_t stirRank;
 	fmpz_init(stirRank);
 	fmpz_tdiv_q(stirRank, rank, stirSectionSize);
@@ -274,29 +283,18 @@ void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<uint8
 		fmpz_print(stirRank);
 		cout << endl;					
 	}
-	rgf_unrank(stirRank, seqLen, symCount, rgfOut);		
+	std::vector<int> counts(maxSym);
+	rgf_unrank_opt(stirRank, seqLen, symCount, combVals, invPerm, counts, rgfOut);		
 	fmpz_clear(stirRank);
 	if (DEBUG) {
 		cout << "RGF Seq: ";
 		printVector(rgfOut);	
 	}
-	
-	
-	
-	// Apply inverse perm to recreate seq	
-	std::vector<uint8_t> invPerm(symCount);
-	for (int i = 0; i < symCount; i++) {
-		invPerm[symPerm[i]] = i;
-	}
-	
-	//TODO - this could maybe be moved to the Stirling section to avoid another loop over seqLen?
-	for (int i = 0; i < seqLen; i++) {
-		uint8_t sym = rgfOut[i]-1;
-		uint8_t val = combVals[invPerm[sym]];
-		rgfOut[i] = val;
-	}
+		
+		
 	
 	if (DEBUG) {
+		cout << "Entropy of Seq: "<< std::fixed << std::setprecision(2) << measureEntropy(counts, seqLen) << endl;
 		cout << "Final Seq: ";
 		printVector(rgfOut);
 	}
@@ -311,7 +309,22 @@ void printVector(std::vector<uint8_t>& vals) {
 }
 
 // Compute the information content
-double measureEntropy(const std::vector<uint8_t>& seq, int maxSym) {
+double measureEntropy(std::vector<int>& counts, int seqLen) {
+	double n = seqLen;
+    if (n == 0.0) return 0.0;
+	
+	double total = 0.0;
+	for (int i = 0; i < (int)counts.size(); i++) {
+		int count = counts[i];
+		if (count == 0) continue;		
+		total += (count * std::log2(count/n));
+	}
+	return -total;
+	
+}
+
+/*
+double measureEntropyOld(const std::vector<uint8_t>& seq, int maxSym) {
 	
     double n = static_cast<double>(seq.size());
     
@@ -336,3 +349,4 @@ double measureEntropy(const std::vector<uint8_t>& seq, int maxSym) {
     double result = -total_log_sum;
     return result;//std::round(result * 100.0) / 100.0;
 }
+*/
