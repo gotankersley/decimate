@@ -2,7 +2,7 @@
 using std::cout, std::endl;
 
 
-const bool DEBUG = true;
+const bool DEBUG = false;
 const int INVALID = -1;
 
 //Combinatorial function to count the ways to rank:
@@ -48,8 +48,7 @@ void near_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankOut
 	}
 
 	std::vector<uint8_t> rgfSeq(seqLen);
-		
-	std::vector<int> counts(maxSym);
+			
 	int symCount = INVALID;	 
 	for (int i = 0; i < seqLen; i++){
 		uint8_t val = valSeq[i];
@@ -58,8 +57,7 @@ void near_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankOut
 		if (valToSym[val] == INVALID) { //First time this symbol has been seen		
 			symCount++;
 			valToSym[val] = symCount;
-			sym = symCount;	
-			counts[sym]++;
+			sym = symCount;				
 		}
 		else sym = valToSym[val];
 		
@@ -69,8 +67,7 @@ void near_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankOut
 	
 	if (DEBUG) {
 		cout << "Ranking: ";		
-		printVector(valSeq);
-		cout << "Entropy of Seq: "<< std::fixed << std::setprecision(2) << measureEntropy(counts, seqLen) << endl;
+		printVector(valSeq);		
 	}
 	
 	//Permutation of symbols -> vals
@@ -176,7 +173,7 @@ void near_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankOut
 	fmpz_clear(symRank);			
 }
 
-void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<uint8_t>& rgfOut) {
+void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int>& countsOut, std::vector<uint8_t>& rgfOut) {
 			
 	
 	//  1. Get symbol section
@@ -282,9 +279,8 @@ void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<uint8
 		cout << "Stir Rank: " << endl;
 		fmpz_print(stirRank);
 		cout << endl;					
-	}
-	std::vector<int> counts(maxSym);
-	rgf_unrank_opt(stirRank, seqLen, symCount, combVals, invPerm, counts, rgfOut);		
+	}	
+	rgf_unrank_opt(stirRank, seqLen, symCount, combVals, invPerm, countsOut, rgfOut);		
 	fmpz_clear(stirRank);
 	if (DEBUG) {
 		cout << "RGF Seq: ";
@@ -294,7 +290,7 @@ void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<uint8
 		
 	
 	if (DEBUG) {
-		cout << "Entropy of Seq: "<< std::fixed << std::setprecision(2) << measureEntropy(counts, seqLen) << endl;
+		//cout << "Entropy of Unranked Seq: "<< std::fixed << std::setprecision(2) << measureEntropy(counts, seqLen) << endl;
 		cout << "Final Seq: ";
 		printVector(rgfOut);
 	}

@@ -45,8 +45,7 @@ void gen_rgf_row_old(int n, int k, uint8_t& CUR, fmpz_mat_t rowOut) { //Deprecat
 	
 	uint8_t NEXT = !CUR;
 	
-	for (int length = 1; length < (n+1); length++) {		
-		if (length % 1000 == 0) std::cout << length << std::endl;
+	for (int length = 1; length < (n+1); length++) {				
 		for (int m = 1; m < (k+1); m++) {
 			// Standard Recurrence: S(L, m) = m*S(L-1, m) + S(L-1, m+1)
 			fmpz_t product;
@@ -282,8 +281,7 @@ void rgf_rank_row(std::vector<uint8_t>& rgf, int k, fmpz_mat_t row, fmpz_t rankO
 void rgf_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& rgfOut) {		
 	fmpz_mat_t row;	
 	gen_rgf_row(n-1, k, row);
-	rgf_unrank_row(rank, n, k, row, rgfOut);
-	//std::cout << "Finished unrank gen" << std::endl;
+	rgf_unrank_row(rank, n, k, row, rgfOut);	
 	fmpz_mat_clear(row);
 }
 void rgf_unrank_opt(fmpz_t rank, int n, int k, std::vector<uint8_t>& combVals, std::vector<uint8_t>& invPerm, std::vector<int>& countsOut, std::vector<uint8_t>& rgfOut) {
@@ -347,7 +345,8 @@ void rgf_unrank_row(fmpz_t rank, int n, int k, fmpz_mat_t row, std::vector<uint8
 	fmpz_init(countStay);
 	fmpz_init(tVal);
 	for (int i = 1; i < n; i++) {
-		if (i % 1000 == 0) std::cout << "Unrank: " << i << std::endl;
+		//if (i % 10000 == 0) std::cout << "Unrank: " << i << std::endl;
+		
 		// Inverted Recurrence: S(L-1, m) = (S(L, m) - S(L-1, m+1)) / m
 		// We must iterate backwards (k -> 1) because we need prev_row[m+1]
 		for (int m = k; m >= currentMax; m--) {
@@ -411,7 +410,8 @@ void rgf_unrank_row_opt(fmpz_t rank, int n, int k, fmpz_mat_t row, std::vector<u
 	fmpz_init(countStay);
 	fmpz_init(tVal);
 	for (int i = 1; i < n; i++) {
-		if (i % 1000 == 0) std::cout << "Unrank: " << i << std::endl;
+		//if (i % 1000 == 0) std::cout << "Unrank: " << i << std::endl;
+		
 		// Inverted Recurrence: S(L-1, m) = (S(L, m) - S(L-1, m+1)) / m
 		// We must iterate backwards (k -> 1) because we need prev_row[m+1]
 		for (int m = k; m >= currentMax; m--) {

@@ -1,5 +1,5 @@
 #include <iostream>
-//#include <iomanip>
+#include <iomanip>
 #include <cstdint>
 #include <vector>
 #include <cstdlib>
@@ -14,11 +14,12 @@ using std::cout, std::endl;
 
 
 
-const int SEQ_LEN = 8;//10000;
-const int MAX_SYM = 8;
-const int K_SHAPING = 4;
+const int SEQ_LEN = 100000;
+const int MAX_SYM = 16;
+const int K_SHAPING = 0;
+const bool VERIFY = false;
 
-void b2n(std::vector<uint8_t>& digits, int base, fmpz_t nOut) {
+void b2n(std::vector<uint8_t>& digits, int base, std::vector<int>& countsOut, fmpz_t nOut) {
 	fmpz_zero(nOut);
 	for (int i = 0; i < (int)digits.size(); i++) {
 		uint8_t digit = digits[i];
@@ -27,44 +28,47 @@ void b2n(std::vector<uint8_t>& digits, int base, fmpz_t nOut) {
 		fmpz_ui_pow_ui(power, base, i);
 		fmpz_addmul_ui(nOut, power, digit);
 		fmpz_clear(power);
+		countsOut[digit]++;
 	}
-	
 }
 
 int main() {
 	srand(42); 	
 	std::vector<uint8_t> valSeq(SEQ_LEN);
 	
-	
+	//Generate a random sequence
 	for (int i = 0; i < SEQ_LEN; i++) {
 		valSeq[i] = rand()%MAX_SYM;
 	}
-	//cout << "Val Seq: " << endl;
-	//printVector(valSeq);
-	//cout << "Entropy of Seq: "<< std::fixed << std::setprecision(2) << measureEntropy(valSeq, MAX_SYM) << endl;
+	
 	
 	fmpz_t normRank;
 	fmpz_init(normRank);
-	b2n(valSeq, MAX_SYM, normRank);
-
+	std::vector<int> valCounts(MAX_SYM);
+	b2n(valSeq, MAX_SYM, valCounts, normRank);	
 		
 	fmpz_t normCopy;
 	fmpz_init(normCopy);
 	fmpz_set(normCopy, normRank);
 	std::vector<uint8_t> rgfSeq(SEQ_LEN+K_SHAPING);
-	near_entropic_unrank(normRank, SEQ_LEN+K_SHAPING, MAX_SYM, rgfSeq);		
+	std::vector<int> entCounts(MAX_SYM);
+	near_entropic_unrank(normRank, SEQ_LEN+K_SHAPING, MAX_SYM, entCounts, rgfSeq);		
 	fmpz_clear(normRank);
 	
-	//cout << "RGF Seq: " << endl;
-	//printVector(rgfSeq);
-	//cout << "Entropy of Transform: " << std::fixed << std::setprecision(2) << measureEntropy(rgfSeq, MAX_SYM) << endl;
+	double valEntropy = measureEntropy(valCounts, SEQ_LEN);
+	double entEntropy = measureEntropy(entCounts, SEQ_LEN);
+	cout << "Entropy of Val Seq: "<< std::fixed << std::setprecision(2) << valEntropy << endl;
+	cout << "Entropy of Ent Seq: "<< std::fixed << std::setprecision(2) << entEntropy << endl;
+	cout << "Delta: "<< std::fixed << std::setprecision(2) << valEntropy - entEntropy << endl;
+
+	if (VERIFY) {
+		fmpz_t rank;	
+		fmpz_init(rank);
+		near_entropic_rank(rgfSeq, MAX_SYM, rank);
 	
-	fmpz_t rank;	
-	fmpz_init(rank);
-	near_entropic_rank(rgfSeq, MAX_SYM, rank);				
-	//	
-	assert(fmpz_equal(rank, normCopy) && "rank does not match!");				
-	fmpz_clear(rank);
+		assert(fmpz_equal(rank, normCopy) && "rank does not match!");				
+		fmpz_clear(rank);
+	}
 	fmpz_clear(normCopy);
 	
 	return 0;

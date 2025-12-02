@@ -1,4 +1,4 @@
-CXX = g++ #-O3
+CXX = g++ -O3
 CXXFLAGS = -Wall -std=c++17 -I./lib
 LDFLAGS = -lflint #-lgmp -lgmpxx # Library linking
 
