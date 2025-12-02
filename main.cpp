@@ -13,7 +13,7 @@
 using std::cout, std::endl;
 
 const int SEQ_LEN = 10000;
-const int MAX_SYM = 128;
+const int MAX_SYM = 16;
 const int K_SHAPING = 0;
 const bool VERIFY = false;
 
@@ -53,8 +53,8 @@ int main() {
 	near_entropic_unrank(normRank, SEQ_LEN+K_SHAPING, MAX_SYM, entCounts, rgfSeq);		
 	fmpz_clear(normRank);
 	
-	double valEntropy = measureEntropy(valCounts, SEQ_LEN);
-	double entEntropy = measureEntropy(entCounts, SEQ_LEN);
+	double valEntropy = measureEntropy(valCounts, valSeq.size());
+	double entEntropy = measureEntropy(entCounts, rgfSeq.size());
 	cout << "Entropy of Val Seq: "<< std::fixed << std::setprecision(2) << valEntropy << endl;
 	cout << "Entropy of Ent Seq: "<< std::fixed << std::setprecision(2) << entEntropy << endl;
 	cout << "Delta: "<< std::fixed << std::setprecision(2) << valEntropy - entEntropy << endl;
