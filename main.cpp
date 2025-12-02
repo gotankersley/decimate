@@ -12,10 +12,8 @@
 #include "lib/near_entropic.h"
 using std::cout, std::endl;
 
-
-
-const int SEQ_LEN = 100000;
-const int MAX_SYM = 16;
+const int SEQ_LEN = 10000;
+const int MAX_SYM = 128;
 const int K_SHAPING = 0;
 const bool VERIFY = false;
 
