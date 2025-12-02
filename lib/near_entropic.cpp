@@ -319,30 +319,3 @@ double measureEntropy(std::vector<int>& counts, int seqLen) {
 	
 }
 
-/*
-double measureEntropyOld(const std::vector<uint8_t>& seq, int maxSym) {
-	
-    double n = static_cast<double>(seq.size());
-    
-    // Handle empty string case to avoid division by zero
-    if (n == 0.0) return 0.0;
-
-    // Pre-calculate frequencies (Optimization: O(N) instead of O(N^2))
-    std::vector<uint8_t> counts(maxSym);	
-    for (uint8_t val : seq) {    
-        counts[val]++;
-    }
-
-    double total_log_sum = 0.0;
-    for (uint8_t val : seq) {           
-        // Probability of the current symbol
-        double p = counts[val] / n;
-        total_log_sum += std::log2(p);
-    }
-
-    // Apply negative sign and round to 2 decimal places
-    // C++ standard round() rounds to nearest integer, so we multiply/divide by 100
-    double result = -total_log_sum;
-    return result;//std::round(result * 100.0) / 100.0;
-}
-*/
