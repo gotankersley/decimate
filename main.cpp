@@ -12,9 +12,10 @@
 #include "lib/near_entropic.h"
 using std::cout, std::endl;
 
-const int SEQ_LEN = 10000;
+const int SEQ_LEN = 100;
 const int MAX_SYM = 16;
-const int K_SHAPING = 0;
+const int K_SHAPING = 1;
+const int K_SEARCH = 10;
 const bool VERIFY = false;
 
 void b2n(std::vector<uint8_t>& digits, int base, std::vector<int>& countsOut, fmpz_t nOut) {
@@ -31,7 +32,7 @@ void b2n(std::vector<uint8_t>& digits, int base, std::vector<int>& countsOut, fm
 }
 
 int main() {
-	srand(42); 	
+	srand(44); 	
 	std::vector<uint8_t> valSeq(SEQ_LEN);
 	
 	//Generate a random sequence
@@ -44,30 +45,38 @@ int main() {
 	fmpz_init(normRank);
 	std::vector<int> valCounts(MAX_SYM);
 	b2n(valSeq, MAX_SYM, valCounts, normRank);	
-		
+	double valEntropy = measureEntropy(valCounts, valSeq.size());
+	cout << "Entropy of Val Seq: "<< std::fixed << std::setprecision(2) << valEntropy << endl;
+	
 	fmpz_t normCopy;
 	fmpz_init(normCopy);
-	fmpz_set(normCopy, normRank);
-	std::vector<uint8_t> rgfSeq(SEQ_LEN+K_SHAPING);
-	std::vector<int> entCounts(MAX_SYM);
-	near_entropic_unrank(normRank, SEQ_LEN+K_SHAPING, MAX_SYM, entCounts, rgfSeq);		
-	fmpz_clear(normRank);
-	
-	double valEntropy = measureEntropy(valCounts, valSeq.size());
-	double entEntropy = measureEntropy(entCounts, rgfSeq.size());
-	cout << "Entropy of Val Seq: "<< std::fixed << std::setprecision(2) << valEntropy << endl;
-	cout << "Entropy of Ent Seq: "<< std::fixed << std::setprecision(2) << entEntropy << endl;
-	cout << "Delta: "<< std::fixed << std::setprecision(2) << valEntropy - entEntropy << endl;
-
-	if (VERIFY) {
-		fmpz_t rank;	
-		fmpz_init(rank);
-		near_entropic_rank(rgfSeq, MAX_SYM, rank);
-	
-		assert(fmpz_equal(rank, normCopy) && "rank does not match!");				
-		fmpz_clear(rank);
+	int bestK = -1;
+	double bestDelta = -1;
+	for (int k = 0; k < K_SEARCH; k++) {
+		fmpz_set(normCopy, normRank);
+		std::vector<uint8_t> rgfSeq(SEQ_LEN+k);
+		std::vector<int> entCounts(MAX_SYM);
+		near_entropic_unrank(normCopy, SEQ_LEN+k, MAX_SYM, entCounts, rgfSeq);		
+		double entEntropy = measureEntropy(entCounts, rgfSeq.size());
+		double delta = valEntropy - entEntropy;
+		if (delta > bestDelta) {
+			bestDelta = delta;
+			bestK = k;
+		}
+		cout << " - Entropy of Ent Seq " << k << ": " << std::fixed << std::setprecision(2) << entEntropy << " | Delta: " << delta << endl;	
 	}
+	cout << "Best K: " << bestK << ", Delta: " << bestDelta << endl;
 	fmpz_clear(normCopy);
+			
+	//if (VERIFY) {
+	//	fmpz_t rank;	
+	//	fmpz_init(rank);
+	//	near_entropic_rank(rgfSeq, MAX_SYM, rank);
+	//
+	//	assert(fmpz_equal(rank, normRank) && "rank does not match!");				
+	//	fmpz_clear(rank);
+	//}
+	fmpz_clear(normRank);
 	
 	return 0;
 }

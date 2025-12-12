@@ -8,7 +8,7 @@
 #include "flint/arith.h"
 #include "combinations.h"
 #include "permutations.h"
-#include "set_partitions.h"
+#include "rgf.h"
 
 
 void printVector(std::vector<uint8_t>& vals);

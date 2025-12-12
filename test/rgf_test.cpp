@@ -5,7 +5,7 @@
 
 #include "flint/fmpz.h"
 #include "flint/arith.h"
-#include "../lib/set_partitions.h"
+#include "../lib/rgf.h"
 
 using std::cout, std::endl;
 
@@ -14,12 +14,12 @@ const int N = 5;
 const int K =3;
 
 
-void printVector(std::vector<uint8_t>& vals) {    
-	for (int val : vals) {
-		cout << +val << ","; 
-	}
-	cout << endl;
-}
+void printVector(std::vector<uint8_t>& vals);// {    
+//	for (int val : vals) {
+//		cout << +val << ","; 
+//	}
+//	cout << endl;
+//}
 
 
 int main() {

@@ -24,7 +24,8 @@ int main() {
 		fmpz_set_ui(bigR, r);	
 				
 		std::vector<uint8_t> seq(SEQ_LEN);
-		near_entropic_unrank(bigR, SEQ_LEN, MAX_SYM, seq);	
+		std::vector<int> counts(MAX_SYM);
+		near_entropic_unrank(bigR, SEQ_LEN, MAX_SYM, counts, seq);	
 		fmpz_clear(bigR);
 		
 		cout << "Seq: ";

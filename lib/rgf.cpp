@@ -1,4 +1,4 @@
-#include "set_partitions.h"
+#include "rgf.h"
 #include <iostream>
 
 void gen_rgf_table(int n, int k, fmpz_mat_t tableOut) {
