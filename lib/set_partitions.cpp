@@ -1,6 +1,7 @@
 #include "set_partitions.h"
 #include <iostream>
 
+using std::cout, std::endl;
 
 void gen_initial_coeffs(int m, fmpz_mat_t coeffsOut) {
 	//Create coefficients for polynomial B(x) = x/1! + x^2/2! + ... + x^m/m!
@@ -30,7 +31,7 @@ void mult_poly(fmpz_mat_t coeffs1, fmpz_mat_t coeffs2, fmpz_mat_t coeffsOut) {
 	//			p[i + j] += x * y	
 	//	return p
 	int polyLen1 = coeffs1->c;
-	int polyLen2 = coeffs1->c;	
+	int polyLen2 = coeffs2->c;	
 	int resLen = (polyLen1 + polyLen2 - 1);
 	fmpz_mat_init(coeffsOut, FRACTION_SIZE, resLen);
 	fmpz_mat_zero(coeffsOut);
@@ -66,8 +67,9 @@ void mult_poly(fmpz_mat_t coeffs1, fmpz_mat_t coeffs2, fmpz_mat_t coeffsOut) {
 				fmpz_add(nOut, nOut, productN); 
 			}
 			else {
-				fmpz_addmul(nOut, nOut, productD); 
-				fmpz_addmul(nOut, productN, dOut); 
+				fmpz_mul(nOut, nOut, productD); 
+				fmpz_mul(productN, productN, dOut); 
+				fmpz_add(nOut, nOut, productN); 
 				fmpz_mul(dOut, dOut, productD);
 			}
 		}
@@ -75,24 +77,27 @@ void mult_poly(fmpz_mat_t coeffs1, fmpz_mat_t coeffs2, fmpz_mat_t coeffsOut) {
 	
 	fmpz_clear(productN);
 	fmpz_clear(productD);
-	
+	cout << "Poly mult res:" << endl;
+	fmpz_mat_print_pretty(coeffsOut);
+	cout << endl;
 }
 
-void gen_coeff_table(int maxN, int maxK, int m) {//, fmpz_mat_t tableOut) {
+void gen_coeff_table(int maxN, int maxK, int m) {//Output is serialized
 	//Note:  This is the precalculated part that is used by the
 	//stirling2_max_less_than() function to make it viable.
 	//We are calculating everything but the final step where n! is added
 	fmpz_mat_t baseCoeffs;	
 	gen_initial_coeffs(m, baseCoeffs);	
-	serialize_mat("k0.mat", baseCoeffs);
+	//serialize_mat("k1.mat", baseCoeffs);
+	cout << "Base Coeffs: " << endl;
+	fmpz_mat_print_pretty(baseCoeffs);
+	cout << endl;
 	
-	fmpz_mat_t curCoeffs;	
-	fmpz_mat_t* curCoeffsPtr = &curCoeffs;
+	fmpz_mat_t curCoeffs;		
 	fmpz_mat_init(curCoeffs, FRACTION_SIZE, m);
 	fmpz_mat_set(curCoeffs, baseCoeffs); //Copy - used for successive powers
 		
-	fmpz_mat_t resCoeffs;
-	fmpz_mat_t* resCoeffsPtr = &resCoeffs;
+	fmpz_mat_t resCoeffs;	
 	
 	//Raise the base polynomial to the kth power
 	fmpz_t factorialK;	
@@ -102,16 +107,16 @@ void gen_coeff_table(int maxN, int maxK, int m) {//, fmpz_mat_t tableOut) {
 	fmpz_init(gcd);
 	for (int k = 2; k <= maxK; k++) {
 		fmpz_fac_ui(factorialK, k);			
-		mult_poly(baseCoeffs, *curCoeffsPtr, *resCoeffsPtr);
+		mult_poly(baseCoeffs, curCoeffs, resCoeffs);
 		
 		//Extract coefficients, and store - Note: we only need up to power of N-K
-		int maxIdx = std::min(maxN-k+1, (int)((*resCoeffsPtr)->c)); 
+		int maxIdx = std::min(maxN-k+1, (int)(resCoeffs->c)); 
 		fmpz_mat_t col;
 		fmpz_mat_init(col, FRACTION_SIZE, maxIdx);
 		for (int i = 0; i < maxIdx; i++) {
 			//Simplify
-			fmpz* n = fmpz_mat_entry(*resCoeffsPtr, NUM, i);
-			fmpz* d = fmpz_mat_entry(*resCoeffsPtr, DEN, i);
+			fmpz* n = fmpz_mat_entry(resCoeffs, NUM, i);
+			fmpz* d = fmpz_mat_entry(resCoeffs, DEN, i);
 			fmpz* colN = fmpz_mat_entry(col, NUM, i);
 			fmpz* colD = fmpz_mat_entry(col, DEN, i);
 						
@@ -128,12 +133,15 @@ void gen_coeff_table(int maxN, int maxK, int m) {//, fmpz_mat_t tableOut) {
 			
 		}
 		
-		serialize_mat("k_.mat", col);
+		//serialize_mat("k_.mat", col);
+		cout << "Col: " << k << endl;
+		fmpz_mat_print_pretty(col);
+		cout << endl;
 		fmpz_mat_clear(col);
 		
 		//Swap current
-		fmpz_mat_clear(*curCoeffsPtr);
-		curCoeffsPtr = resCoeffsPtr;
+		fmpz_mat_swap(curCoeffs, resCoeffs);
+		fmpz_mat_clear(resCoeffs);				
 	}
 	fmpz_clear(factorialK);
 	fmpz_clear(gcd);
@@ -141,6 +149,7 @@ void gen_coeff_table(int maxN, int maxK, int m) {//, fmpz_mat_t tableOut) {
 	
 	fmpz_mat_clear(baseCoeffs);
 	fmpz_mat_clear(curCoeffs);
+	
 }
 
 void stirling2_max_less_than_coeffs(fmpz_mat_t coeffs, int n, int k, int m, fmpz_t countOut) {
@@ -162,6 +171,46 @@ void stirling2_max_less_than_coeffs(fmpz_mat_t coeffs, int n, int k, int m, fmpz
 	fmpz_tdiv_q(countOut, countOut, vd); //Since this is a count, it will always be an integer
 	fmpz_clear(factorialN);
 	
+}
+
+void stirling2_max(fmpz_mat_t coeffs, int n, int k, int m, fmpz_t countOut) {
+	//This calculates the Stirling2 number of set-parts with n elements, k parts, and having a max part size that is exactly m
+	fmpz_t count2;
+	fmpz_init(count2);
+	stirling2_max_less_than_coeffs(coeffs, n, k, m-1, count2);	
+	stirling2_max_less_than_coeffs(coeffs, n, k, m, countOut);
+	fmpz_sub(countOut, countOut, count2);
+	fmpz_clear(count2);
+}
+
+void stirling2_max_r(fmpz_mat_t coeffs, int n, int k, int m, int r, fmpz_t countOut) {
+	//This calculates the Stirling2 number of set-parts with n elements, k parts, and having a max part size that is exactly m, and has an initial part size of r
+	
+	//TODO - See if this can be optimized
+	if (r == m) { //This is the total minus all the other ones
+		fmpz_t previousSum;
+		fmpz_init(previousSum);
+		fmpz_t count2;
+		fmpz_init(count2);
+		for (int i = 0; i < r; i++) {
+			stirling2_max_r(coeffs, n, k, m, i, count2);
+			fmpz_add(previousSum, previousSum, count2);
+		}
+		fmpz_clear(count2);
+		stirling2_max_less_than_coeffs(coeffs, n, k, m, countOut); //Total
+		fmpz_add(countOut, countOut, previousSum);
+		fmpz_clear(previousSum);
+	}
+	else {		
+		fmpz_t count2;
+		fmpz_init(count2);
+		stirling2_max_less_than_coeffs(coeffs, n-r, k-1, m-1, count2);
+		stirling2_max_less_than_coeffs(coeffs, n-r, k-1, m, countOut);
+		fmpz_sub(countOut, countOut, count2);
+		fmpz_clear(count2);
+		uint64_t cmb = comb(n-1, r-1);
+		fmpz_mul_ui(countOut, countOut, cmb);		
+	}
 }
 
 void serialize_mat(const char* filename, fmpz_mat_t mat) {
