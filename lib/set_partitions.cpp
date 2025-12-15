@@ -88,7 +88,7 @@ void gen_coeff_table(int maxN, int maxK, int m) {//Output is serialized
 	//We are calculating everything but the final step where n! is added
 	fmpz_mat_t baseCoeffs;	
 	gen_initial_coeffs(m, baseCoeffs);	
-	//serialize_mat("k1.mat", baseCoeffs);
+	//serialize_mat("K1.mat", baseCoeffs);
 	cout << "Base Coeffs: " << endl;
 	fmpz_mat_print_pretty(baseCoeffs);
 	cout << endl;
@@ -133,7 +133,8 @@ void gen_coeff_table(int maxN, int maxK, int m) {//Output is serialized
 			
 		}
 		
-		//serialize_mat("k_.mat", col);
+		std::string filename = "K" + std::to_string(k) + ".mat";
+		serialize_mat(filename.c_str(), col);
 		cout << "Col: " << k << endl;
 		fmpz_mat_print_pretty(col);
 		cout << endl;

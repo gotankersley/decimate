@@ -27,6 +27,22 @@ uint64_t comb_rank(std::vector<uint8_t>& vals) {
 	return rankOut;
 }
 
+void comb_rank(std::vector<uint8_t>& vals, fmpz_t rankOut) {
+	int k = vals.size();	
+	fmpz_init(rankOut);
+	fmpz_zero(rankOut);
+		
+	fmpz_t cmb;
+	fmpz_init(cmb);	
+	for (int i = 0; i < k; i++) {
+		fmpz_bin_uiui(cmb, vals[k-1-i], k-i);
+		fmpz_add(rankOut, rankOut, cmb);		
+	}
+	fmpz_clear(cmb);
+	
+}
+
+
 void comb_unrank(uint64_t rank, int n, int k, std::vector<uint8_t>& valsOut) {	
 	
 	for (int i = 0; i < k; i++) {
@@ -36,4 +52,23 @@ void comb_unrank(uint64_t rank, int n, int k, std::vector<uint8_t>& valsOut) {
 		valsOut[k-i-1] = n;
 		rank -= comb(n, k - i);
 	}	
+}
+
+
+void comb_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& valsOut) {
+	fmpz_t cmb;
+	fmpz_init(cmb);	
+	for (int i = 0; i < k; i++) {
+		fmpz_bin_uiui(cmb, n, k-i);
+		int compareCmbAndRank = fmpz_cmp(cmb, rank);
+		while (compareCmbAndRank > 0) {			
+			n--;
+			fmpz_bin_uiui(cmb, n, k-i);
+			compareCmbAndRank = fmpz_cmp(cmb, rank);
+		}
+		valsOut[k-i-1] = n;
+		fmpz_bin_uiui(cmb, n, k-i);
+		fmpz_sub(rank, rank, cmb);		
+	}	
+	fmpz_clear(cmb);
 }
