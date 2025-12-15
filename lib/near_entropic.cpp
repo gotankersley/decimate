@@ -297,12 +297,6 @@ void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int>&
 }
 
 // UTIL
-void printVector(std::vector<uint8_t>& vals) {    
-	for (int val : vals) {
-		cout << +val << ","; 
-	}
-	cout << endl;
-}
 
 // Compute the information content
 double measureEntropy(std::vector<int>& counts, int seqLen) {

@@ -3,6 +3,7 @@
 #include <string>
 #include <cstdint>
 #include <stdio.h>
+#include "io_lib.h"
 #include "combinations.h"
 #include "flint/fmpz.h"
 #include "flint/fmpz_mat.h"
@@ -17,8 +18,6 @@ void mult_poly(fmpz_mat_t coeffs1, fmpz_mat_t coeffs2, fmpz_mat_t coeffsOut);
 void gen_initial_coeffs(int m, fmpz_mat_t coeffsOut);
 void gen_coeff_table(int maxN, int maxK, int m);//Output is serialized to files
 
-void serialize_mat(const char* filename, fmpz_mat_t mat);
-//void deserialize_mat(const char* filename, fmpz_mat_t mat); 
 
 
 //seq_to_set_part

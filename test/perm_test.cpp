@@ -5,6 +5,7 @@
 
 #include "flint/fmpz.h"
 #include "flint/arith.h"
+#include "../lib/io_lib.h"
 #include "../lib/permutations.h"
 
 using std::cout, std::endl;
@@ -25,12 +26,6 @@ uint64_t factorial(int n) {
     return result;
 }
 
-void printVector(std::vector<uint8_t>& vals) {    
-	for (int val : vals) {
-		cout << +val << ","; 
-	}
-	cout << endl;
-}
 
 
 int main() {

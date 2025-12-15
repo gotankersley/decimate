@@ -5,6 +5,7 @@
 
 #include "flint/fmpz.h"
 #include "flint/arith.h"
+#include "../lib/io_lib.h"
 #include "../lib/combinations.h"
 
 using std::cout, std::endl;
@@ -13,12 +14,6 @@ using std::cout, std::endl;
 const int N = 10;
 const int K = 3;
 
-void printVector(std::vector<uint8_t>& vals);// {    
-//	for (int val : vals) {
-//		cout << val << ","; 
-//	}
-//	cout << endl;
-//}
 
 int main() {
 	int combs = comb(N, K);
