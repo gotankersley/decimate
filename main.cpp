@@ -9,6 +9,7 @@
 #include "flint/fmpz.h"
 #include "flint/fmpz_mat.h"
 #include "flint/arith.h"
+#include "lib/base_lib.h"
 #include "lib/near_entropic.h"
 using std::cout, std::endl;
 
@@ -18,18 +19,7 @@ const int K_SHAPING = 1;
 const int K_SEARCH = 10;
 const bool VERIFY = false;
 
-void b2n(std::vector<uint8_t>& digits, int base, std::vector<int>& countsOut, fmpz_t nOut) {
-	fmpz_zero(nOut);
-	for (int i = 0; i < (int)digits.size(); i++) {
-		uint8_t digit = digits[i];
-		fmpz_t power;
-		fmpz_init(power);
-		fmpz_ui_pow_ui(power, base, i);
-		fmpz_addmul_ui(nOut, power, digit);
-		fmpz_clear(power);
-		countsOut[digit]++;
-	}
-}
+
 
 int main() {
 	srand(44); 	

@@ -3,7 +3,7 @@ CXXFLAGS = -Wall -std=c++17 -I./lib
 LDFLAGS = -lflint #-lgmp -lgmpxx # Library linking
 
 # --- Main Application Files ---
-SRCS = main.cpp lib/near_entropic.cpp lib/combinations.cpp lib/permutations.cpp lib/rgf.cpp lib/set_partitions.cpp lib/io_lib.cpp
+SRCS = main.cpp lib/near_entropic.cpp lib/combinations.cpp lib/permutations.cpp lib/rgf.cpp lib/set_partitions.cpp lib/io_lib.cpp lib/base_lib.cpp
 OBJS = $(SRCS:.cpp=.o)
 TARGET = decimate
 
