@@ -156,7 +156,7 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 			fmpz_bin_uiui(elementSectionSize, n-1, r-1); //The first element is always fixed as the lowest		
 			fmpz_tdiv_q(elementSectionSize, count, elementSectionSize);
 			
-			std::vector<uint8_t> elementIds(r-1);
+			std::vector<int> elementIds(r-1);
 			int e = 0;
 			std::set<int>::iterator it = setPart[k].begin();			
 			for (it++; it != setPart[k].end(); it++) { //Ignore first element			
@@ -252,7 +252,7 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 	
 }
 
-void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int>& countsOut, std::vector<uint8_t>& rgfOut) {
+void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int>& countsOut, std::vector<uint8_t>& valSeqOut) {
 			
 	
 	//  1. Get symbol section
@@ -262,7 +262,7 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 		fmpz_print(rank);
 		cout << endl;
 	}
-	/*
+	
 	fmpz_t count;
 	fmpz_t prevCount;
 	
@@ -284,9 +284,7 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 	
 	if (DEBUG) {
 		cout << "Sym Count: " << symCount << endl;		
-	}
-	fmpz_clear(count);
-	fmpz_clear(prevCount);
+	}	
 	
 	
 	//Calculate section sizes	
@@ -308,12 +306,11 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 		fmpz_print(stirSectionSize);
 		cout << endl;
 	}
-
+	
 	// 2. Get the values from the combination rank of symbols
 	fmpz_t rankModStir;	
 	fmpz_init(rankModStir);	
-	fmpz_mod(rankModStir, rank, stirSectionSize);		
-	fmpz_clear(stirSectionSize);	
+	fmpz_mod(rankModStir, rank, stirSectionSize);			
 	fmpz_tdiv_q(rankModStir, rankModStir, combSectionSize);	
 	uint64_t combRank = fmpz_get_ui(rankModStir);	
 	fmpz_clear(rankModStir);	
@@ -350,31 +347,114 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 		printVector(symPerm);		
 	}
 
+	
 	// 4. Get the Set Partition from Stirling2 rank		
 	// Note: We're also applying inverse perm to recreate seq	
 	fmpz_t stirRank;
 	fmpz_init(stirRank);
 	fmpz_tdiv_q(stirRank, rank, stirSectionSize);
+	fmpz_clear(stirSectionSize);	
+
 	if (DEBUG) {
 		cout << "Stir Rank: " << endl;
 		fmpz_print(stirRank);
 		cout << endl;					
 	}	
-	rgf_unrank_opt(stirRank, seqLen, symCount, combVals, invPerm, countsOut, rgfOut);		
-	fmpz_clear(stirRank);
-	if (DEBUG) {
-		cout << "RGF Seq: ";
-		printVector(rgfOut);	
+	// Unrank the Set-Partition one part at a time
+	int n = seqLen;
+	int prevLargestPartSize = (n-symCount)+1;
+	indexed_set_t unusedElements;
+	for (int i = 0; i < n; i++) {
+		unusedElements.insert(i);
 	}
-		
-		
+	fmpz_t count2;
+	fmpz_t elementSectionSize;
+	fmpz_t elementRank;
 	
-	if (DEBUG) {
-		//cout << "Entropy of Unranked Seq: "<< std::fixed << std::setprecision(2) << measureEntropy(counts, seqLen) << endl;
-		cout << "Final Seq: ";
-		printVector(rgfOut);
-	}
-	*/
+	fmpz_init(count2);	
+	fmpz_init(elementSectionSize);	
+	fmpz_init(elementRank);	
+	
+	for (int p = 0; p < symCount-1; p++) {
+		int k = symCount - p;
+		std::string filename = std::to_string(k) + ".mat";		
+		fmpz_mat_t coeffs;
+		deserialize_mat(filename.c_str(), coeffs); //Load precalculated coefficients from file
+				
+		uint8_t partVal = combVals[invPerm[k]];		
+				
+		//Set Partition largest part section	
+		fmpz_zero(count);
+		fmpz_zero(prevCount);
+		int m;
+		for (m = prevLargestPartSize; m > 0; m--) {
+			stirling2_max(coeffs, n, k, m, count2);
+			fmpz_add(count, count, count2);
+			if (fmpz_cmp(count, stirRank) > 0) {
+				fmpz_sub(stirRank, stirRank, prevCount);
+				break;
+			}
+			else fmpz_set(prevCount, count);			
+		}		
+		prevLargestPartSize = m;
+		
+		//Set Partition initial part size section	
+		fmpz_zero(count);
+		fmpz_zero(prevCount);
+		int r;
+		int lastR;
+		for (r = m; r > 0; r--) {
+			stirling2_max_r(coeffs, n, k, m, r, count2);
+			lastR = r;
+			//Count may be zero, but it will just be ignored
+			fmpz_add(count, count, count2);
+			
+			if (fmpz_cmp(count, stirRank) > 0) {
+				fmpz_sub(stirRank, stirRank, prevCount);
+				break;
+			}
+			else fmpz_set(prevCount, count);
+		}
+		if (lastR != r) stirling2_max_r(coeffs, n, k, m, r, count2); //initialPartSectionSize
+		fmpz_mat_clear(coeffs);
+		countsOut[k] = r;
+		
+		//Set Partition initial element combination.
+		//The first element is always fixed as the lowest
+		fmpz_bin_uiui(elementSectionSize, n-1, r-1); //The first element is always fixed as the lowest		
+		fmpz_tdiv_q(elementSectionSize, count2, elementSectionSize);
+		fmpz_tdiv_q(elementRank, stirRank, elementSectionSize);
+		
+		std::vector<int> elementIds(r-1);	
+		comb_unrank(elementRank, n-1, r-1, elementIds);
+		int initialElement = *unusedElements.begin();
+		unusedElements.erase(unusedElements.begin());		
+		valSeqOut[initialElement] = partVal;
+		if (r > 1) {
+			for (size_t i = 0; i < elementIds.size(); i++) {
+				int elementId = elementIds[i];
+				int element = *unusedElements.find_by_order(elementId);
+				
+				//Apply values here so we don't have to do another loop over the sequence				
+				valSeqOut[element] = partVal;								
+			}
+			//Todo store iterators from previous? std::vector<indexed_set_t::iterator> its
+			for (size_t i = 0; i < elementIds.size(); i++) {
+				int elementId = elementIds[i];
+				unusedElements.erase(unusedElements.find_by_order(elementId));				
+			}
+		}
+		fmpz_mul(elementRank, elementSectionSize, elementRank);
+		fmpz_sub(stirRank, stirRank, elementRank);
+		n -= r; //Iterate		
+	}	
+	fmpz_clear(count);
+	fmpz_clear(count2);
+	fmpz_clear(prevCount);
+	fmpz_clear(elementSectionSize);
+	fmpz_clear(elementRank);
+	fmpz_clear(stirRank);
+	
 }
 
 

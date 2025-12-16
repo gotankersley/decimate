@@ -6,28 +6,21 @@
 #include "flint/fmpz.h"
 #include "flint/arith.h"
 #include "../lib/nearer_entropic.h"
-//#include <ext/pb_ds/assoc_container.hpp>
-//#include <ext/pb_ds/tree_policy.hpp> // Including tree_order_statistics_node_update
 
 using std::cout, std::endl;
-//using namespace __gnu_pbds;
 
-#define indexed_set_t tree<int, null_type,std::less<int>, rb_tree_tag,tree_order_statistics_node_update>
 
 const int MAX_SYM = 4;//5;
 const int SEQ_LEN = 3;
 
 int main() {
-
-	 
-
-	cout << "here" << endl;
-	////std::vector<uint8_t> seq = {0, 1, 2, 1, 2};				
-	//std::vector<uint8_t> seq = {1,0,3,3,0,1};
-	//fmpz_t rank;	
-	//fmpz_init(rank);
-	//nearer_entropic_rank(seq, MAX_SYM, rank);
-	//fmpz_clear(rank);
+		       
+	//std::vector<uint8_t> seq = {0, 1, 2, 1, 2};				
+	std::vector<uint8_t> seq = {1,0,3,3,0,1};
+	fmpz_t rank;	
+	fmpz_init(rank);
+	nearer_entropic_rank(seq, MAX_SYM, rank);
+	fmpz_clear(rank);
 	/*
 	uint64_t total = (uint64_t)pow(MAX_SYM, SEQ_LEN);
 	

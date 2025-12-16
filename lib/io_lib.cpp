@@ -1,7 +1,14 @@
 #include "io_lib.h"
 
 void printVector(std::vector<uint8_t>& vals) {    
-	for (int val : vals) {
+for (int val : vals) {
+		std::cout << +val << ","; 
+	}
+	std::cout << std::endl;
+}
+
+void printVector(std::vector<int>& vals) {    
+for (int val : vals) {
 		std::cout << +val << ","; 
 	}
 	std::cout << std::endl;

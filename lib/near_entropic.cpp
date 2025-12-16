@@ -232,8 +232,7 @@ void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int>&
 	// 2. Get the values from the combination rank of symbols
 	fmpz_t rankModStir;	
 	fmpz_init(rankModStir);	
-	fmpz_mod(rankModStir, rank, stirSectionSize);		
-	fmpz_clear(stirSectionSize);	
+	fmpz_mod(rankModStir, rank, stirSectionSize);			
 	fmpz_tdiv_q(rankModStir, rankModStir, combSectionSize);	
 	uint64_t combRank = fmpz_get_ui(rankModStir);	
 	fmpz_clear(rankModStir);	
@@ -275,6 +274,7 @@ void near_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int>&
 	fmpz_t stirRank;
 	fmpz_init(stirRank);
 	fmpz_tdiv_q(stirRank, rank, stirSectionSize);
+	fmpz_clear(stirSectionSize);
 	if (DEBUG) {
 		cout << "Stir Rank: " << endl;
 		fmpz_print(stirRank);

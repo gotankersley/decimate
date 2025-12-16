@@ -18,4 +18,4 @@ using namespace __gnu_pbds; //Indexed Set
 #define indexed_set_t tree<int, null_type,std::less<int>, rb_tree_tag,tree_order_statistics_node_update>
 
 void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankOut);
-void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int>& countsOut, std::vector<uint8_t>& rgfOut);
+void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int>& countsOut, std::vector<uint8_t>& valSeqOut);

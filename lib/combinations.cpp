@@ -27,7 +27,7 @@ uint64_t comb_rank(std::vector<uint8_t>& vals) {
 	return rankOut;
 }
 
-void comb_rank(std::vector<uint8_t>& vals, fmpz_t rankOut) {
+void comb_rank(std::vector<int>& vals, fmpz_t rankOut) {
 	int k = vals.size();	
 	fmpz_init(rankOut);
 	fmpz_zero(rankOut);
@@ -55,7 +55,7 @@ void comb_unrank(uint64_t rank, int n, int k, std::vector<uint8_t>& valsOut) {
 }
 
 
-void comb_unrank(fmpz_t rank, int n, int k, std::vector<uint8_t>& valsOut) {
+void comb_unrank(fmpz_t rank, int n, int k, std::vector<int>& valsOut) {
 	fmpz_t cmb;
 	fmpz_init(cmb);	
 	for (int i = 0; i < k; i++) {
