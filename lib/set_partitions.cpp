@@ -76,10 +76,7 @@ void mult_poly(fmpz_mat_t coeffs1, fmpz_mat_t coeffs2, fmpz_mat_t coeffsOut) {
 	}
 	
 	fmpz_clear(productN);
-	fmpz_clear(productD);
-	cout << "Poly mult res:" << endl;
-	fmpz_mat_print_pretty(coeffsOut);
-	cout << endl;
+	fmpz_clear(productD);	
 }
 
 void gen_coeff_table(int maxN, int maxK, int m) {//Output is serialized
@@ -88,10 +85,7 @@ void gen_coeff_table(int maxN, int maxK, int m) {//Output is serialized
 	//We are calculating everything but the final step where n! is added
 	fmpz_mat_t baseCoeffs;	
 	gen_initial_coeffs(m, baseCoeffs);	
-	//serialize_mat("K1.mat", baseCoeffs);
-	cout << "Base Coeffs: " << endl;
-	fmpz_mat_print_pretty(baseCoeffs);
-	cout << endl;
+	serialize_mat("K1.mat", baseCoeffs);	
 	
 	fmpz_mat_t curCoeffs;		
 	fmpz_mat_init(curCoeffs, FRACTION_SIZE, m);
@@ -134,10 +128,7 @@ void gen_coeff_table(int maxN, int maxK, int m) {//Output is serialized
 		}
 		
 		std::string filename = "K" + std::to_string(k) + ".mat";
-		serialize_mat(filename.c_str(), col);
-		cout << "Col: " << k << endl;
-		fmpz_mat_print_pretty(col);
-		cout << endl;
+		serialize_mat(filename.c_str(), col);		
 		fmpz_mat_clear(col);
 		
 		//Swap current
@@ -215,3 +206,26 @@ void stirling2_max_r(fmpz_mat_t coeffs, int n, int k, int m, int r, fmpz_t count
 }
 
 
+void printSetPart(std::vector<std::set<int>>& setPart) {
+	cout << "Set Part: " << endl;
+	for (int p = 0; p < (int)setPart.size(); p++) {
+		cout << "Part: " << p << " [";
+		std::set<int> part = setPart[p];
+		
+		for (const int element : part) {
+			cout << +element << ",";         
+		}		
+		cout << "]" << endl;
+	}
+	std::cout << std::endl;
+	cout << endl;
+}
+
+int get_size_of_largest_part(std::vector<std::set<int>>& setPart, int start) {
+	size_t largestPart = -1;
+	for (int i = start; i < (int)setPart.size(); i++) {
+		std::set<int> part;
+		largestPart = std::max(largestPart, part.size());
+	}
+	return largestPart;
+}

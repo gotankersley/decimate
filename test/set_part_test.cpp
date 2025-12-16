@@ -20,6 +20,7 @@ const int M = 3;
 
 int main() {
 	
-	gen_coeff_table(N, K, M);
+	//gen_coeff_table(N, K, M);
+	cout << "here" << endl;
 	return 0;
 }
