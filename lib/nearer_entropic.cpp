@@ -91,9 +91,9 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 	}
 		
 	if (DEBUG) {
-		cout << "Rank after symbol section: " << endl;
+		cout << "Rank after symbol section: ";
 		fmpz_print(rankOut);
-		cout << endl;
+		cout << endl << endl;
 	}
 		
 		
@@ -118,23 +118,44 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 	
 	
 	//Loop minus-1, because there is only a single way to do the last part that uses all the remaining elements
-	for (int p = 0; p < symCount-1; p++) { 
+	for (int p = 0; p < symCount-1; p++) { 		
 		int k = symCount - p;
-		std::string filename = std::to_string(k) + ".mat";		
-		fmpz_mat_t coeffs;
-		deserialize_mat(filename.c_str(), coeffs); //Load precalculated coefficients from file
+		int m = get_size_of_largest_part(setPart, p);
+		int r = setPart[p].size();
+		if (DEBUG) {
+			cout << "---- SET PART ITERATION: " << p << " ---" << endl;
+			cout << "K: " << k << endl;
+			cout << "M: " << m << endl;
+			cout << "R: " << r << endl;
+		}
+		//std::string filename = "K" + std::to_string(k) + ".mat";		
+		fmpz_mat_t coeffs;	
+		gen_coeff_col(n, k, prevLargestPartSize, coeffs);
 		
-		// 2. By Set Partition largest part section					
-		int m = get_size_of_largest_part(setPart, k);
+		//deserialize_mat(filename.c_str(), coeffs); //Load precalculated coefficients from file
+		cout << "Coeffs: " << n << "," << k << "," << prevLargestPartSize << endl;
+		fmpz_mat_print_pretty(coeffs);
+		cout << endl << endl;
+		
+		// 2. By Set Partition largest part section	
+		if (DEBUG) {
+			cout << "Stir Rank before Largest part section: ";
+			fmpz_print(stirRank);
+			cout << endl;
+		}
 		for (int i = prevLargestPartSize; i > m; i--) {
 			stirling2_max(coeffs, n, k, i, count);
 			fmpz_add(stirRank, stirRank, count);
 		}
-		prevLargestPartSize = m;
+		prevLargestPartSize = m;	
+		if (DEBUG) {
+			cout << "Stir Rank after Largest part section: ";
+			fmpz_print(stirRank);
+			cout << endl;
+		}		
 		//Note: At this point in the unranking we have just found the value of m (largest part size)
 		
-		// 3. By Set Partition initial part size section	
-		int r = setPart[p].size();
+		// 3. By Set Partition initial part size section			
 		for (int i = m; i > r; i--) {
 			stirling2_max_r(coeffs, n, k, m, i, count);
 			//Count may be zero, but it will just be ignored
@@ -157,24 +178,29 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 			fmpz_tdiv_q(elementSectionSize, count, elementSectionSize);
 			
 			std::vector<int> elementIds(r-1);
-			int e = 0;
-			std::set<int>::iterator it = setPart[k].begin();			
-			for (it++; it != setPart[k].end(); it++) { //Ignore first element			
+			int e = 0;			
+			std::set<int>::iterator it = setPart[k-1].begin();						
+			for (it++; it != setPart[k-1].end(); it++) { //Ignore first element					
 				int elementVal = *it;
 				int elementId = unusedElements.order_of_key(elementVal);
 				elementIds[e] = elementId;
+				//cout << "elementVal: " << +elementVal << endl;
+				//cout << "elementId: " << +elementId << endl;
+				//cout << "elementIds: " << elementIds[e] << endl;
 				e++;
-			}
+			}			
+			
 			//Remove all the used elements from the set
-			it = setPart[k].begin();
-			for (it++; it != setPart[k].end(); it++) { //Ignore first element			
+			it = setPart[k-1].begin();
+			for (it++; it != setPart[k-1].end(); it++) { //Ignore first element			
 				int elementVal = *it;
 				unusedElements.erase(unusedElements.find(elementVal));							
 			}
 			
 			if (DEBUG) {
-				cout << "Element Ids: " << endl;
+				cout << "Element Ids: ";
 				printVector(elementIds);				
+				cout << endl << endl;
 			}
 			
 			comb_rank(elementIds, elementRank);
@@ -197,10 +223,10 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 	fmpz_mul_ui(stirSectionSize, combSectionSize, totalComb);
 	
 	if (DEBUG) {
-		cout << "Comb Section Size: " << endl;
+		cout << "Comb Section Size: ";
 		fmpz_print(combSectionSize);
 		cout << endl;
-		cout << "Stir Section Size: " << endl;
+		cout << "Stir Section Size: ";
 		fmpz_print(stirSectionSize);
 		cout << endl;
 	}
@@ -208,9 +234,9 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 	fmpz_clear(stirSectionSize);
 	
 	if (DEBUG) {
-		cout << "Stir Rank: " << endl;
+		cout << "Stir Rank: ";
 		fmpz_print(stirRank);
-		cout << endl;
+		cout << endl << endl;
 	}
 	
 	fmpz_clear(stirRank);
@@ -225,7 +251,7 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 		printVector(vals);
 		cout << "Comb Section Size: ";
 		fmpz_print(combSectionSize);
-		cout << endl;
+		cout << endl << endl;
 	}
 	fmpz_clear(combSectionSize);
 	

@@ -12,15 +12,15 @@ using std::cout, std::endl;
 
 
 const int N = 6;
-const int K = 4;
-const int M = 3;
+const int K = 3;
+const int M = 2;
 
 
 
 
 int main() {
 	
-	//gen_coeff_table(N, K, M);
-	cout << "here" << endl;
+	gen_coeff_table(N, K, M);
+	cout << "Generating - N: " << N << ", K: " << K << ", M: " << M << endl;
 	return 0;
 }

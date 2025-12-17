@@ -144,8 +144,77 @@ void gen_coeff_table(int maxN, int maxK, int m) {//Output is serialized
 	
 }
 
+
+void gen_coeff_col(int maxN, int maxK, int m, fmpz_mat_t coeffsOut) {
+	fmpz_mat_t baseCoeffs;		
+	gen_initial_coeffs(m, baseCoeffs);	
+	
+	if (maxK == 1) {
+		fmpz_mat_swap(coeffsOut, baseCoeffs);
+		//fmpz_mat_clear(baseCoeffs);
+		return;
+	}	
+	
+	fmpz_mat_t curCoeffs;		
+	fmpz_mat_init(curCoeffs, FRACTION_SIZE, m);
+	fmpz_mat_set(curCoeffs, baseCoeffs); //Copy - used for successive powers
+		
+	fmpz_mat_t resCoeffs;	
+	
+	//Raise the base polynomial to the kth power
+
+	
+	for (int k = 2; k <= maxK; k++) {
+		mult_poly(baseCoeffs, curCoeffs, resCoeffs);		
+		if (k == maxK) {			
+			//Extract coefficients, and store - Note: we only need up to power of N-K
+			int maxIdx = std::min(maxN-k+1, (int)(resCoeffs->c)); 
+			fmpz_t factorialK;	
+			fmpz_t gcd;
+			
+			fmpz_init(factorialK);
+			fmpz_init(gcd);
+			
+			fmpz_mat_t col;
+			fmpz_mat_init(col, FRACTION_SIZE, maxIdx);
+			fmpz_fac_ui(factorialK, k);			
+			for (int i = 0; i < maxIdx; i++) {
+				//Simplify
+				fmpz* n = fmpz_mat_entry(resCoeffs, NUM, i);
+				fmpz* d = fmpz_mat_entry(resCoeffs, DEN, i);
+				fmpz* colN = fmpz_mat_entry(col, NUM, i);
+				fmpz* colD = fmpz_mat_entry(col, DEN, i);
+							
+				fmpz_mul(colD, d, factorialK); //Precalculate k!, so we don't have to do this later	
+				
+				fmpz_gcd(gcd, n, colD);
+				if (fmpz_is_one(gcd)) {
+					fmpz_set(colN, n);
+				}
+				else {
+					fmpz_tdiv_q(colN, n, gcd);
+					fmpz_tdiv_q(colD, colD, gcd);
+				}			
+				
+			}
+			
+			fmpz_mat_swap(coeffsOut, col);
+			//fmpz_mat_clear(col);
+			fmpz_clear(gcd);
+			fmpz_clear(factorialK);
+		}
+		
+		//Swap current
+		fmpz_mat_swap(curCoeffs, resCoeffs);
+		fmpz_mat_clear(resCoeffs);				
+	}	
+	
+	fmpz_mat_clear(baseCoeffs);
+	fmpz_mat_clear(curCoeffs);
+}
+
 void stirling2_max_less_than_coeffs(fmpz_mat_t coeffs, int n, int k, int m, fmpz_t countOut) {
-	fmpz_init(countOut);
+	//fmpz_init(countOut);
 	fmpz_zero(countOut);
 	if (k > n || m <= 0) return; //Count of 0
 	
@@ -162,7 +231,9 @@ void stirling2_max_less_than_coeffs(fmpz_mat_t coeffs, int n, int k, int m, fmpz
 	fmpz_mul(countOut, factorialN, vn);
 	fmpz_tdiv_q(countOut, countOut, vd); //Since this is a count, it will always be an integer
 	fmpz_clear(factorialN);
-	
+	cout << "stir2 max lt: " << n << ", " << k << "," << m << " = ";
+	fmpz_print(countOut);
+	cout << endl;
 }
 
 void stirling2_max(fmpz_mat_t coeffs, int n, int k, int m, fmpz_t countOut) {
@@ -222,10 +293,11 @@ void printSetPart(std::vector<std::set<int>>& setPart) {
 }
 
 int get_size_of_largest_part(std::vector<std::set<int>>& setPart, int start) {
-	size_t largestPart = -1;
+	int largestPart = -1;	
+	
 	for (int i = start; i < (int)setPart.size(); i++) {
-		std::set<int> part;
-		largestPart = std::max(largestPart, part.size());
-	}
+		std::set<int> part = setPart[i];
+		if ((int)part.size() > largestPart) largestPart = part.size();
+	}	
 	return largestPart;
 }

@@ -18,6 +18,7 @@ const int FRACTION_SIZE = 2;
 void mult_poly(fmpz_mat_t coeffs1, fmpz_mat_t coeffs2, fmpz_mat_t coeffsOut);
 void gen_initial_coeffs(int m, fmpz_mat_t coeffsOut);
 void gen_coeff_table(int maxN, int maxK, int m);//Output is serialized to files
+void gen_coeff_col(int maxN, int maxK, int m, fmpz_mat_t coeffsOut);
 
 
 void stirling2_max_less_than_table(fmpz_mat_t coeffs, int n, int k, int m, fmpz_t countOut);
