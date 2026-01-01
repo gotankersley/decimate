@@ -141,8 +141,10 @@ void stirling2_max_lt(int n, int k, int m, fmpz_t countOut) { //Polynomial EGF
 		fmpz* numPtr = fmpq_numref(coeff);
 		fmpz* denPtr = fmpq_denref(coeff);
 		
-		fmpz_mul(countOut, factorialN, numPtr);
-		fmpz_tdiv_q(countOut, countOut, denPtr);
+		fmpz_mul(coeffNum, factorialN, numPtr);
+		fmpz_mul(coeffDen, factorialK, denPtr);
+		fmpz_tdiv_q(countOut, coeffNum, coeffDen);
+		
 		fmpz_clear(factorialN);
 		fmpz_clear(factorialK);		
 	}
@@ -239,8 +241,9 @@ void stirling2_max_initial_lt(int n, int k, int m, int r, fmpz_t countOut) { //Q
 		fmpz* numPtr = fmpq_numref(coeff);
 		fmpz* denPtr = fmpq_denref(coeff);
 		
-		fmpz_mul(countOut, factorialN, numPtr);
-		fmpz_tdiv_q(countOut, countOut, denPtr);
+		fmpz_mul(coeffNum, factorialN, numPtr);
+		fmpz_mul(coeffDen, factorialK, denPtr);
+		fmpz_tdiv_q(countOut, coeffNum, coeffDen);
 		fmpz_clear(factorialN);
 		fmpz_clear(factorialK);		
 	}
