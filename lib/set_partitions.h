@@ -7,14 +7,14 @@
 #include "io_lib.h"
 #include "combinations.h"
 #include "flint/fmpz.h"
-#include "flint/fmpz_mat.h"
+//#include "flint/fmpz_mat.h"
 #include "flint/arith.h"
 #include "flint/fmpq.h"
 #include "flint/fmpq_poly.h"
 
 
-void gen_initial_coeffs(int m, fmpz_mat_t coeffsOut);
-void gen_coeff_table(int maxN, int maxK, int m);//Output is serialized to files
+//void gen_initial_coeffs(int m, fmpz_mat_t coeffsOut);
+//void gen_coeff_table(int maxN, int maxK, int m);//Output is serialized to files
 
 //TODO - cache coeffs
 void stirling2_max_lt(int n, int k, int m, fmpz_t countOut); //Polynomial EGF

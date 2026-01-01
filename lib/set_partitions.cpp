@@ -3,6 +3,7 @@
 
 using std::cout, std::endl;
 
+/*
 void gen_initial_coeffs(int m, fmpz_mat_t coeffsOut) {
 	//Create coefficients for polynomial B(x) = x/1! + x^2/2! + ... + x^m/m!
 	//Table dimensions: 
@@ -86,11 +87,11 @@ void gen_coeff_table(int maxN, int maxK, int m) {//Output is serialized
 	fmpz_mat_clear(curCoeffs);
 	
 }
-
+*/
 
 
 void stirling2_max_lt(int n, int k, int m, fmpz_t countOut) { //Polynomial EGF
-	fmpz_zero(countCout);
+	fmpz_zero(countOut);
 	if (k > n) return;
 	else if (m <= 0) return;
 	//TODO - cache coeffs
@@ -98,6 +99,7 @@ void stirling2_max_lt(int n, int k, int m, fmpz_t countOut) { //Polynomial EGF
 	// 1. Create coefficients for polynomial B(x) = x/1! + x^2/2! + ... + x^m/m!
 	fmpz_t coeffNum;
 	fmpz_t coeffDen;	
+	
 	fmpq_t coeff;
 	fmpq_poly_t poly;
 	
@@ -122,7 +124,7 @@ void stirling2_max_lt(int n, int k, int m, fmpz_t countOut) { //Polynomial EGF
 	
 	
 	// 3. Extract coefficient
-    if (targetIndex >= 0 && targetIndex < fmpq_poly_length(poly) {
+    if (targetIndex >= 0 && targetIndex < fmpq_poly_length(poly)) {
 		fmpq_poly_get_coeff_fmpq(coeff, poly, targetIndex);
 		
 		// 4. Multiply by n! / k!
@@ -131,15 +133,16 @@ void stirling2_max_lt(int n, int k, int m, fmpz_t countOut) { //Polynomial EGF
 		fmpz_t factorialK;	
 		
 		fmpz_init(factorialN);
-		fmpz_init(factorialK;
+		fmpz_init(factorialK);
 		
 		fmpz_fac_ui(factorialN, n);	
 		fmpz_fac_ui(factorialK, k);	
 		
-		fmpq_get_fmpz_frac(coeffNum, coeffDen, coeff);
+		fmpz* numPtr = fmpq_numref(coeff);
+		fmpz* denPtr = fmpq_denref(coeff);
 		
-		fmpz_mul(countOut, factorialN, coeffNum);
-		fmpz_tdiv_q(countOut, countOut, coeffDen);
+		fmpz_mul(countOut, factorialN, numPtr);
+		fmpz_tdiv_q(countOut, countOut, denPtr);
 		fmpz_clear(factorialN);
 		fmpz_clear(factorialK);		
 	}
@@ -165,40 +168,46 @@ void stirling2_max_between(int n, int k, int mHi, int mLo, fmpz_t countOut) {
 void stirling2_max_initial_lt(int n, int k, int m, int r, fmpz_t countOut) { //Q-nomial EGF
 	//This calculates the Stirling2 number of set-parts with n elements, k parts, 
 	//and having a max part size that is exactly m, and that has an initial part size less-than r
-	fmpz_zero(countCout);
+	fmpz_zero(countOut);
 	// Edge Cases
 	if (k < 0) return;
 	else if (k > n) return;
-	else if (n == 0)
+	else if (n == 0) {
 		if (k == 0) fmpz_one(countOut);
 		return;		
+	}
 	else if (k == 0) return;
 	else if (r > m) return;
 	
 	// Create Polynomials
 	fmpz_t coeffNum;
 	fmpz_t coeffDen;	
+	fmpz_t prevDen;	
 	fmpq_t coeff;
 	fmpq_poly_t poly;
 	fmpq_poly_t polyQ;
 	
 	fmpz_init(coeffNum);
 	fmpz_init(coeffDen);	
+	fmpz_init(prevDen);	
 	fmpq_init(coeff);
 	fmpq_poly_init(poly); 
 	fmpq_poly_init(polyQ); 
 	
 	fmpz_one(coeffNum);
 	fmpz_one(coeffDen);
+	fmpz_one(prevDen);
 	for (int i = 0; i < m; i++) {
 		fmpz_mul_ui(coeffDen, coeffDen, i+1);
 		fmpq_set_fmpz_frac(coeff, coeffNum, coeffDen);
 		fmpq_poly_set_coeff_fmpq(poly, i, coeff);
 		
-		// Check if this power is valid (r-1 <= i <= m-1)
+		// Check if this power is valid
 		if (i >= (r-1)) {
+			fmpq_set_fmpz_frac(coeff, coeffNum, prevDen);
 			fmpq_poly_set_coeff_fmpq(polyQ, i, coeff);
 		}
+		fmpz_set(prevDen, coeffDen);
 	}
 	
 	// Compute powers
@@ -213,24 +222,25 @@ void stirling2_max_initial_lt(int n, int k, int m, int r, fmpz_t countOut) { //Q
 	fmpq_poly_mullow(polyQ, polyQ, poly, targetIndex);
 	
 	//Extract coefficient
-    if (targetIndex >= 0 && targetIndex < fmpq_poly_length(polyQ) {
+    if (targetIndex >= 0 && targetIndex < fmpq_poly_length(polyQ)) {
 		fmpq_poly_get_coeff_fmpq(coeff, polyQ, targetIndex);
 		
 		// 4. Multiply by (n-1)! / (k-1)!
-		//TODO: Precalc
+		//TODO: Precalc factorials
 		fmpz_t factorialN;	
 		fmpz_t factorialK;	
 		
 		fmpz_init(factorialN);
-		fmpz_init(factorialK;
+		fmpz_init(factorialK);
 		
 		fmpz_fac_ui(factorialN, n-1);	
 		fmpz_fac_ui(factorialK, k-1);	
 		
-		fmpq_get_fmpz_frac(coeffNum, coeffDen, coeff);
+		fmpz* numPtr = fmpq_numref(coeff);
+		fmpz* denPtr = fmpq_denref(coeff);
 		
-		fmpz_mul(countOut, factorialN, coeffNum);
-		fmpz_tdiv_q(countOut, countOut, coeffDen);
+		fmpz_mul(countOut, factorialN, numPtr);
+		fmpz_tdiv_q(countOut, countOut, denPtr);
 		fmpz_clear(factorialN);
 		fmpz_clear(factorialK);		
 	}
@@ -240,6 +250,7 @@ void stirling2_max_initial_lt(int n, int k, int m, int r, fmpz_t countOut) { //Q
 	fmpq_clear(coeff);
 	fmpz_clear(coeffNum);
 	fmpz_clear(coeffDen);
+	fmpz_clear(prevDen);
 	fmpq_poly_clear(poly);
 	fmpq_poly_clear(polyQ);
 	
@@ -265,7 +276,7 @@ void stirling2_max_initial_gt(int n, int k, int m, int r, fmpz_t countOut) {
 	fmpz_clear(mCount);
 }
 
-
+/*
 void stirling2_max_less_than_coeffs(fmpz_mat_t coeffs, int n, int k, int m, fmpz_t countOut) {
 	fmpz_init(countOut);
 	fmpz_zero(countOut);
@@ -287,7 +298,7 @@ void stirling2_max_less_than_coeffs(fmpz_mat_t coeffs, int n, int k, int m, fmpz
 	
 }
 
-/*
+
 void stirling2_max_eq(fmpz_mat_t coeffs, int n, int k, int m, fmpz_t countOut) {
 	//This calculates the Stirling2 number of set-parts with n elements, k parts, and having a max part size that is exactly m
 	fmpz_t count2;

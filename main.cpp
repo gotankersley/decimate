@@ -13,11 +13,10 @@
 #include "lib/near_entropic.h"
 using std::cout, std::endl;
 
-const int SEQ_LEN = 100;
+const int SEQ_LEN = 30;
 const int MAX_SYM = 16;
-const int K_SHAPING = 1;
 const int K_SEARCH = 10;
-const bool VERIFY = false;
+const bool VERIFY = true;
 
 
 
@@ -37,7 +36,7 @@ int main() {
 	b2n(valSeq, MAX_SYM, valCounts, normRank);	
 	double valEntropy = measureEntropy(valCounts, valSeq.size());
 	cout << "Entropy of Val Seq: "<< std::fixed << std::setprecision(2) << valEntropy << endl;
-	
+	fmpz_sub_ui(normRank, normRank, 2000);
 	fmpz_t normCopy;
 	fmpz_init(normCopy);
 	int bestK = -1;
@@ -54,18 +53,20 @@ int main() {
 			bestK = k;
 		}
 		cout << " - Entropy of Ent Seq " << k << ": " << std::fixed << std::setprecision(2) << entEntropy << " | Delta: " << delta << endl;	
+		
+		//if (VERIFY) {
+		//	fmpz_t rank;	
+		//	fmpz_init(rank);
+		//	near_entropic_rank(rgfSeq, MAX_SYM, rank);
+		//
+		//	assert(fmpz_equal(rank, normRank) && "rank does not match!");				
+		//	fmpz_clear(rank);
+		//}
 	}
 	cout << "Best K: " << bestK << ", Delta: " << bestDelta << endl;
 	fmpz_clear(normCopy);
 			
-	//if (VERIFY) {
-	//	fmpz_t rank;	
-	//	fmpz_init(rank);
-	//	near_entropic_rank(rgfSeq, MAX_SYM, rank);
-	//
-	//	assert(fmpz_equal(rank, normRank) && "rank does not match!");				
-	//	fmpz_clear(rank);
-	//}
+	
 	fmpz_clear(normRank);
 	
 	return 0;

@@ -104,11 +104,13 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 	int n = seqLen; 
 	fmpz_t stirRank;
 	fmpz_t count;
+	fmpz_t initialPartSectionSize;
 	fmpz_t elementSectionSize;
 	fmpz_t elementRank;
 	
 	fmpz_init(stirRank);		
 	fmpz_init(count);		
+	fmpz_init(initialPartSectionSize);		
 	fmpz_init(elementSectionSize);		
 	fmpz_init(elementRank);		
 	
@@ -128,14 +130,6 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 			cout << "M: " << m << endl;
 			cout << "R: " << r << endl;
 		}
-		//std::string filename = "K" + std::to_string(k) + ".mat";		
-		fmpz_mat_t coeffs;	
-		gen_coeff_col(n, k, prevLargestPartSize, coeffs);
-		
-		//deserialize_mat(filename.c_str(), coeffs); //Load precalculated coefficients from file
-		cout << "Coeffs: " << n << "," << k << "," << prevLargestPartSize << endl;
-		fmpz_mat_print_pretty(coeffs);
-		cout << endl << endl;
 		
 		// 2. By Set Partition largest part section	
 		if (DEBUG) {
@@ -143,10 +137,8 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 			fmpz_print(stirRank);
 			cout << endl;
 		}
-		for (int i = prevLargestPartSize; i > m; i--) {
-			stirling2_max(coeffs, n, k, i, count);
-			fmpz_add(stirRank, stirRank, count);
-		}
+		stirling2_max_between(n, k, prevLargestPartSize, m, count);
+		fmpz_add(stirRank, stirRank, count);
 		prevLargestPartSize = m;	
 		if (DEBUG) {
 			cout << "Stir Rank after Largest part section: ";
@@ -155,15 +147,13 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 		}		
 		//Note: At this point in the unranking we have just found the value of m (largest part size)
 		
-		// 3. By Set Partition initial part size section			
-		for (int i = m; i > r; i--) {
-			stirling2_max_r(coeffs, n, k, m, i, count);
-			//Count may be zero, but it will just be ignored
-			fmpz_add(stirRank, stirRank, count);			
-		}
+		// 3. By Set Partition initial part size section
+		stirling2_max_initial_gt(n, k, m, r, count);		
+		fmpz_add(stirRank, stirRank, count);			
+	
 		//Note: At this point in the unranking we know the length of the initial part of the set partition r
-		stirling2_max_r(coeffs, n, k, m, r, count); //Count here is initialPartSectionSize
-		fmpz_mat_clear(coeffs);
+		stirling2_max_initial_ge(n, k, m, r, initialPartSectionSize);
+		fmpz_sub(initialPartSectionSize, initialPartSectionSize, count);
 		
 		// 4. By Set Partition initial element combination 		
 		unusedElements.erase(unusedElements.begin());		
@@ -175,7 +165,7 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 			//an indexed ordered set: https://www.geeksforgeeks.org/cpp/ordered-set-gnu-c-pbds/			
 			//TODO: Perhaps this could be optimized by using Factoradics instead?
 			fmpz_bin_uiui(elementSectionSize, n-1, r-1); //The first element is always fixed as the lowest		
-			fmpz_tdiv_q(elementSectionSize, count, elementSectionSize);
+			fmpz_tdiv_q(elementSectionSize, initialPartSectionSize, elementSectionSize);
 			
 			std::vector<int> elementIds(r-1);
 			int e = 0;			
@@ -210,6 +200,7 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 		n -= r;
 	}
 	fmpz_clear(count);
+	fmpz_clear(initialPartSectionSize);
 	fmpz_clear(elementSectionSize);
 	fmpz_clear(elementRank);
 	
@@ -307,7 +298,7 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 		}
 		else fmpz_set(prevCount, count);
 	}
-	
+	fmpz_clear(prevCount);
 	if (DEBUG) {
 		cout << "Sym Count: " << symCount << endl;		
 	}	
@@ -380,7 +371,6 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 	fmpz_init(stirRank);
 	fmpz_tdiv_q(stirRank, rank, stirSectionSize);
 	fmpz_clear(stirSectionSize);	
-
 	if (DEBUG) {
 		cout << "Stir Rank: " << endl;
 		fmpz_print(stirRank);
@@ -393,62 +383,71 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 	for (int i = 0; i < n; i++) {
 		unusedElements.insert(i);
 	}
-	fmpz_t count2;
+	fmpz_t hiCount;
+	fmpz_t initialPartSectionSize;
 	fmpz_t elementSectionSize;
 	fmpz_t elementRank;
 	
-	fmpz_init(count2);	
+	fmpz_init(hiCount);	
+	fmpz_init(initialPartSectionSize);	
 	fmpz_init(elementSectionSize);	
 	fmpz_init(elementRank);	
 	
 	for (int p = 0; p < symCount-1; p++) {
 		int k = symCount - p;
-		std::string filename = std::to_string(k) + ".mat";		
-		fmpz_mat_t coeffs;
-		deserialize_mat(filename.c_str(), coeffs); //Load precalculated coefficients from file
-				
+		
 		uint8_t partVal = combVals[invPerm[k]];		
 				
-		//Set Partition largest part section	
-		fmpz_zero(count);
-		fmpz_zero(prevCount);
+		//Set Partition largest part section
+		//Optimization - use Binary search to find "m"		
+		fmpz_zero(hiCount);
 		int m;
-		for (m = prevLargestPartSize; m > 0; m--) {
-			stirling2_max(coeffs, n, k, m, count2);
-			fmpz_add(count, count, count2);
+		int hi = prevLargestPartSize;
+		int lo = 1;
+		int bisections = ceil(log2(prevLargestPartSize));
+		for (int i = 0; i < bisections; i++) {
+			int mid = floor((lo+hi)/2);
+			stirling2_max_between(n, k, prevLargestPartSize, mid, count);
 			if (fmpz_cmp(count, stirRank) > 0) {
-				fmpz_sub(stirRank, stirRank, prevCount);
-				break;
+				lo = mid;
 			}
-			else fmpz_set(prevCount, count);			
-		}		
+			else {
+				hi = mid;
+				fmpz_set(hiCount, count);
+			}
+		}
+		//Done with Binary search
+		fmpz_sub(stirRank, stirRank, hiCount);
+		m = hi;
 		prevLargestPartSize = m;
 		
+		
 		//Set Partition initial part size section	
-		fmpz_zero(count);
-		fmpz_zero(prevCount);
-		int r;
-		int lastR;
-		for (r = m; r > 0; r--) {
-			stirling2_max_r(coeffs, n, k, m, r, count2);
-			lastR = r;
-			//Count may be zero, but it will just be ignored
-			fmpz_add(count, count, count2);
-			
+		fmpz_zero(hiCount);
+		lo = 1;
+		bisections = ceil(log2(m));
+		for (int i = 0; i < bisections; i++) {
+			int mid = floor((lo+hi)/2);
+			stirling2_max_initial_gt(n, k, m, mid, count);
 			if (fmpz_cmp(count, stirRank) > 0) {
-				fmpz_sub(stirRank, stirRank, prevCount);
-				break;
+				lo = mid;
 			}
-			else fmpz_set(prevCount, count);
+			else {
+				hi = mid;
+				fmpz_set(hiCount, count);
+			}
 		}
-		if (lastR != r) stirling2_max_r(coeffs, n, k, m, r, count2); //initialPartSectionSize
-		fmpz_mat_clear(coeffs);
+		//Done with binary search
+		int r = hi;
+		fmpz_sub(stirRank, stirRank, hiCount);
+		stirling2_max_initial_ge(n, k, m, r, initialPartSectionSize); 
+		fmpz_sub(initialPartSectionSize, initialPartSectionSize, hiCount);
 		countsOut[k] = r;
 		
 		//Set Partition initial element combination.
 		//The first element is always fixed as the lowest
 		fmpz_bin_uiui(elementSectionSize, n-1, r-1); //The first element is always fixed as the lowest		
-		fmpz_tdiv_q(elementSectionSize, count2, elementSectionSize);
+		fmpz_tdiv_q(elementSectionSize, initialPartSectionSize, elementSectionSize);
 		fmpz_tdiv_q(elementRank, stirRank, elementSectionSize);
 		
 		std::vector<int> elementIds(r-1);	
@@ -475,8 +474,8 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 		n -= r; //Iterate		
 	}	
 	fmpz_clear(count);
-	fmpz_clear(count2);
-	fmpz_clear(prevCount);
+	fmpz_clear(hiCount);
+	fmpz_clear(initialPartSectionSize);
 	fmpz_clear(elementSectionSize);
 	fmpz_clear(elementRank);
 	fmpz_clear(stirRank);
