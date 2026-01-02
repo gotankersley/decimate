@@ -10,7 +10,7 @@
 using std::cout, std::endl;
 
 
-const int SEQ_LEN = 3;
+const int SEQ_LEN = 5;
 const int MAX_SYM = 3;
 
 int main() {
