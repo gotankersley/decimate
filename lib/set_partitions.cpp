@@ -13,7 +13,7 @@ void gen_k_facts(int k, fmpz_mat_t kFactsOut) {
 
 
 
-void stirling2_max_lt(int n, int k, int m, fmpz_t kFact, fmpz_t countOut) { //Polynomial EGF
+void stirling2_max_lt(int n, int k, int m, fmpz_t nFact, fmpz_t kFact, fmpz_t countOut) { //Polynomial EGF
 	fmpz_zero(countOut);
 	if (k > n) return;
 	else if (m <= 0) return;
@@ -51,22 +51,13 @@ void stirling2_max_lt(int n, int k, int m, fmpz_t kFact, fmpz_t countOut) { //Po
     if (targetIndex >= 0 && targetIndex < fmpq_poly_length(poly)) {
 		fmpq_poly_get_coeff_fmpq(coeff, poly, targetIndex);		
 		
-		// 4. Multiply by n! / k!
-		//TODO: Precalc
-		fmpz_t factorialN;			
-		
-		fmpz_init(factorialN);		
-		
-		fmpz_fac_ui(factorialN, n);			
-		
+		// 4. Multiply by n! / k!								
 		fmpz* numPtr = fmpq_numref(coeff);
 		fmpz* denPtr = fmpq_denref(coeff);
 		
-		fmpz_mul(coeffNum, factorialN, numPtr);		
+		fmpz_mul(coeffNum, nFact, numPtr);		
 		fmpz_mul(coeffDen, kFact, denPtr);
-		fmpz_tdiv_q(countOut, coeffNum, coeffDen);
-		
-		fmpz_clear(factorialN);		
+		fmpz_tdiv_q(countOut, coeffNum, coeffDen);		
 	}
 	
 	//Clear
@@ -75,19 +66,19 @@ void stirling2_max_lt(int n, int k, int m, fmpz_t kFact, fmpz_t countOut) { //Po
 	fmpz_clear(coeffDen);
 	fmpq_poly_clear(poly);
 }
-void stirling2_max_between(int n, int k, int mHi, int mLo, fmpz_t kFact, fmpz_t countOut) {
+void stirling2_max_between(int n, int k, int mHi, int mLo, fmpz_t nFact, fmpz_t kFact, fmpz_t countOut) {
 	//This calculates the Stirling2 number of set-parts with n elements, k parts, 
 	//and having a max part size that is between mHi and mLo 
 	fmpz_t loCount;
 	fmpz_init(loCount);
-	stirling2_max_lt(n, k, mHi, kFact, countOut);
-	stirling2_max_lt(n, k, mLo, kFact, loCount);	
+	stirling2_max_lt(n, k, mHi, nFact, kFact, countOut);
+	stirling2_max_lt(n, k, mLo, nFact, kFact, loCount);	
 	fmpz_sub(countOut, countOut, loCount);
 	fmpz_clear(loCount);
 }
 
 
-void stirling2_max_initial_lt(int n, int k, int m, int r, fmpz* kFact, fmpz_t countOut) { //Q-nomial EGF
+void stirling2_max_initial_lt(int n, int k, int m, int r, fmpz_t nFact, fmpz_t kFact, fmpz_t countOut) { //Q-nomial EGF
 	//This calculates the Stirling2 number of set-parts with n elements, k parts, 
 	//and having a max part size that is exactly m, and that has an initial part size less-than r
 	fmpz_zero(countOut);
@@ -147,25 +138,24 @@ void stirling2_max_initial_lt(int n, int k, int m, int r, fmpz* kFact, fmpz_t co
     if (targetIndex >= 0 && targetIndex < fmpq_poly_length(polyQ)) {
 		fmpq_poly_get_coeff_fmpq(coeff, polyQ, targetIndex);
 		
-		// 4. Multiply by (n-1)! / (k-1)!
-		//TODO: Precalc factorials
-		fmpz_t factorialN;	
+		// 4. Multiply by (n-1)! / (k-1)!		
+		//fmpz_t factorialN;	
 		//fmpz_t factorialK;	
 		
-		fmpz_init(factorialN);
+		//fmpz_init(factorialN);
 		//fmpz_init(factorialK);
 		
-		fmpz_fac_ui(factorialN, n-1);	
+		//fmpz_fac_ui(factorialN, n-1);	
 		//fmpz_fac_ui(factorialK, k-1);	
 		
 		fmpz* numPtr = fmpq_numref(coeff);
 		fmpz* denPtr = fmpq_denref(coeff);
 		
-		fmpz_mul(coeffNum, factorialN, numPtr);
+		fmpz_mul(coeffNum, nFact, numPtr);
 		//fmpz_mul(coeffDen, factorialK, denPtr);
 		fmpz_mul(coeffDen, kFact, denPtr);
 		fmpz_tdiv_q(countOut, coeffNum, coeffDen);
-		fmpz_clear(factorialN);
+		//fmpz_clear(factorialN);
 		//fmpz_clear(factorialK);		
 	}
 	
@@ -179,23 +169,23 @@ void stirling2_max_initial_lt(int n, int k, int m, int r, fmpz* kFact, fmpz_t co
 	fmpq_poly_clear(polyQ);
 	
 }
-void stirling2_max_initial_ge(int n, int k, int m, int r, fmpz* kFact, fmpz_t countOut) {
+void stirling2_max_initial_ge(int n, int k, int m, int r, fmpz_t nFact, fmpz_t kFact, fmpz_t countOut) {
 	//This calculates the Stirling2 number of set-parts with n elements, k parts, 
 	//and having a max part size that is exactly m, and that has an initial part size greater-than-or-equal to r
 	fmpz_t mCount;
 	fmpz_init(mCount);
-	stirling2_max_initial_lt(n, k, m, r, kFact, countOut);
-	stirling2_max_initial_lt(n, k, m-1, r, kFact, mCount);	
+	stirling2_max_initial_lt(n, k, m, r, nFact, kFact, countOut);
+	stirling2_max_initial_lt(n, k, m-1, r, nFact, kFact, mCount);	
 	fmpz_sub(countOut, countOut, mCount);
 	fmpz_clear(mCount);
 }
-void stirling2_max_initial_gt(int n, int k, int m, int r, fmpz* kFact, fmpz_t countOut) {
+void stirling2_max_initial_gt(int n, int k, int m, int r, fmpz_t nFact, fmpz_t kFact, fmpz_t countOut) {
 	//This calculates the Stirling2 number of set-parts with n elements, k parts, 
 	//and having a max part size that is exactly m, and that has an initial part size greater-than r
 	fmpz_t mCount;
 	fmpz_init(mCount);
-	stirling2_max_initial_lt(n, k, m, r+1, kFact, countOut);
-	stirling2_max_initial_lt(n, k, m-1, r+1, kFact, mCount);	
+	stirling2_max_initial_lt(n, k, m, r+1, nFact, kFact, countOut);
+	stirling2_max_initial_lt(n, k, m-1, r+1, nFact, kFact, mCount);	
 	fmpz_sub(countOut, countOut, mCount);
 	fmpz_clear(mCount);
 }

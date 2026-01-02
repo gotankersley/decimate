@@ -62,7 +62,7 @@ int main() {
 		assert(fmpz_equal_ui(entRank, r) && "rank does not match!");
 				
 		fmpz_clear(entRank);	
-break;		
+		
 	}
 	
 		

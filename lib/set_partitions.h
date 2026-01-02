@@ -19,13 +19,13 @@ void gen_k_facts(int k, fmpz_mat_t kFactsOut);
 
 
 //TODO - cache coeffs
-void stirling2_max_lt(int n, int k, int m, fmpz* kFact, fmpz_t countOut); //Polynomial EGF
-void stirling2_max_between(int n, int k, int mHi, int mLo, fmpz* kFact, fmpz_t countOut);
+void stirling2_max_lt (int n, int k, int m, fmpz_t nFact, fmpz_t kFact, fmpz_t countOut); //Polynomial EGF
+void stirling2_max_between(int n, int k, int mHi, int mLo, fmpz_t nFact, fmpz_t kFact, fmpz_t countOut);
 
 
-void stirling2_max_initial_lt(int n, int k, int m, int r, fmpz* kFact, fmpz_t countOut); //Q-nomial EGF
-void stirling2_max_initial_ge(int n, int k, int m, int r, fmpz* kFact, fmpz_t countOut);
-void stirling2_max_initial_gt(int n, int k, int m, int r, fmpz* kFact, fmpz_t countOut);
+void stirling2_max_initial_lt(int n, int k, int m, int r, fmpz_t nFact, fmpz_t kFact, fmpz_t countOut); //Q-nomial EGF
+void stirling2_max_initial_ge(int n, int k, int m, int r, fmpz_t nFact, fmpz_t kFact, fmpz_t countOut);
+void stirling2_max_initial_gt(int n, int k, int m, int r, fmpz_t nFact, fmpz_t kFact, fmpz_t countOut);
 
 void printSetPart(std::vector<std::set<int>>& setPart);
 int get_size_of_largest_part(std::vector<std::set<int>>& setPart, int start);
