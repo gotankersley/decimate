@@ -2,7 +2,7 @@
 using std::cout, std::endl;
 
 
-const bool DEBUG = true;
+const bool DEBUG = false;
 const int INVALID = -1;
 
 //Combinatorial function to count the ways to rank by symbol count - defined in near_entropic.cpp
@@ -137,8 +137,7 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 			fmpz_print(stirRank);
 			cout << endl;
 		}
-		stirling2_max_between(n, k, prevLargestPartSize, m, count);	
-		cout << endl;
+		stirling2_max_between(n, k, prevLargestPartSize, m, count);			
 		fmpz_add(stirRank, stirRank, count);
 		prevLargestPartSize = m;	
 		if (DEBUG) {
@@ -177,9 +176,11 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 				int elementVal = *it;
 				int elementId = unusedElements.order_of_key(elementVal);
 				elementIds[e] = elementId;
-				cout << "elementVal: " << +elementVal << endl;
-				cout << "elementId: " << +elementId << endl;
-				cout << "elementIds: " << elementIds[e] << endl;
+				if (DEBUG) {
+					cout << "elementVal: " << +elementVal << endl;
+					cout << "elementId: " << +elementId << endl;
+					cout << "elementIds: " << elementIds[e] << endl;
+				}
 				e++;
 			}	
 						
@@ -204,11 +205,6 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 				cout << "Stir Rank after elements: ";
 				fmpz_print(stirRank);
 				cout << endl;
-				//cout << "Used elements after: " << endl;
-				//for (int ele:unusedElements) {
-				//	cout << ele << endl;
-				//}
-				//cout << "---" << endl;
 			}						
 		}
 		//Iterate - essentially we are recursing on all the rest of the parts
