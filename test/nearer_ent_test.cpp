@@ -10,8 +10,8 @@
 using std::cout, std::endl;
 
 
-const int SEQ_LEN = 5;
-const int MAX_SYM = 3;
+const int SEQ_LEN = 6;
+const int MAX_SYM = 4;
 
 int main() {
 	/*
@@ -43,7 +43,7 @@ int main() {
 	uint64_t total = (uint64_t)pow(MAX_SYM, SEQ_LEN);
 	
 	
-	for (uint64_t r = 0; r < total; r++) {		
+	for (uint64_t r = 0; r < total; r++) {			
 		fmpz_t bigR;
 		fmpz_init(bigR);
 		fmpz_set_ui(bigR, r);	
@@ -53,7 +53,7 @@ int main() {
 		nearer_entropic_unrank(bigR, SEQ_LEN, MAX_SYM, counts, seq);	
 		fmpz_clear(bigR);
 		
-		cout << "Seq: ";
+		cout << r << " - Seq: ";
 		printVector(seq); 		
 				
 		fmpz_t entRank;	

@@ -486,23 +486,26 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 		}
 		fmpz_mul(elementSectionSize, elementRank, elementSectionSize);
 		std::vector<int> elementIds(r-1);	
+		std::vector<int> elementVals(r-1);	
 		comb_unrank(elementRank, n-1, r-1, elementIds);
 		int initialElement = *unusedElements.begin();
 		unusedElements.erase(unusedElements.begin());		
 		valSeqOut[initialElement] = partVal;		
-		if (r > 1) {
+		if (r > 1) {		
+			
 			for (size_t i = 0; i < elementIds.size(); i++) {
 				int elementId = elementIds[i];
-				int element = *unusedElements.find_by_order(elementId);
-				
+				int elementVal = *unusedElements.find_by_order(elementId);
+				elementVals[i] = elementVal;				
 				//Apply values here so we don't have to do another loop over the sequence				
-				valSeqOut[element] = partVal;	
+				valSeqOut[elementVal] = partVal;	
 			}
 			//Todo store iterators from previous? std::vector<indexed_set_t::iterator> its
-			for (size_t i = 0; i < elementIds.size(); i++) {
-				int elementId = elementIds[i];
-				unusedElements.erase(unusedElements.find_by_order(elementId));				
+			for (size_t i = 0; i < elementVals.size(); i++) {
+				int elementVal = elementVals[i];				
+				unusedElements.erase(elementVal);
 			}
+			
 		}			
 		fmpz_sub(stirRank, stirRank, elementSectionSize);
 
@@ -510,7 +513,7 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 	}
 	//Use all remaining elements for the last set
 	int finalPartVal = combVals[invPerm[symCount-1]];
-	for (int element: unusedElements) {
+	for (int element: unusedElements) {		
 		valSeqOut[element] = finalPartVal;
 	}
 	fmpz_clear(count);
