@@ -3,91 +3,6 @@
 
 using std::cout, std::endl;
 
-/*
-void gen_initial_coeffs(int m, fmpz_mat_t coeffsOut) {
-	//Create coefficients for polynomial B(x) = x/1! + x^2/2! + ... + x^m/m!
-	//Table dimensions: 
-	// - two rows, first is the numerator, second is the denominator
-	// - column index i corresponds to power x^i	
-	fmpz_mat_init(coeffsOut, FRACTION_SIZE, m);	
-	
-	fmpz_t fact;
-	fmpz_init(fact);
-	fmpz_one(fact);
-	for (int i = 0; i < m; i++) {
-		fmpz_one(fmpz_mat_entry(coeffsOut, NUM, i));
-		fmpz_mul_ui(fact, fact, i+1);
-		fmpz_set(fmpz_mat_entry(coeffsOut, DEN, i), fact);		
-	}
-	fmpz_clear(fact);
-}
-
-
-void gen_coeff_table(int maxN, int maxK, int m) {//Output is serialized
-	//Note:  This is the precalculated part that is used by the
-	//stirling2_max_less_than() function to make it viable.
-	//We are calculating everything but the final step where n! is added
-	fmpz_mat_t baseCoeffs;	
-	gen_initial_coeffs(m, baseCoeffs);	
-	serialize_mat("K1.mat", baseCoeffs);	
-	
-	fmpz_mat_t curCoeffs;		
-	fmpz_mat_init(curCoeffs, FRACTION_SIZE, m);
-	fmpz_mat_set(curCoeffs, baseCoeffs); //Copy - used for successive powers
-		
-	fmpz_mat_t resCoeffs;	
-	
-	//Raise the base polynomial to the kth power
-	fmpz_t factorialK;	
-	fmpz_t gcd;
-	
-	fmpz_init(factorialK);
-	fmpz_init(gcd);
-	for (int k = 2; k <= maxK; k++) {
-		fmpz_fac_ui(factorialK, k);			
-		mult_poly(baseCoeffs, curCoeffs, resCoeffs);
-		
-		//Extract coefficients, and store - Note: we only need up to power of N-K
-		int maxIdx = std::min(maxN-k+1, (int)(resCoeffs->c)); 
-		fmpz_mat_t col;
-		fmpz_mat_init(col, FRACTION_SIZE, maxIdx);
-		for (int i = 0; i < maxIdx; i++) {
-			//Simplify
-			fmpz* n = fmpz_mat_entry(resCoeffs, NUM, i);
-			fmpz* d = fmpz_mat_entry(resCoeffs, DEN, i);
-			fmpz* colN = fmpz_mat_entry(col, NUM, i);
-			fmpz* colD = fmpz_mat_entry(col, DEN, i);
-						
-			fmpz_mul(colD, d, factorialK); //Precalculate k!, so we don't have to do this later	
-			
-			fmpz_gcd(gcd, n, colD);
-			if (fmpz_is_one(gcd)) {
-				fmpz_set(colN, n);
-			}
-			else {
-				fmpz_tdiv_q(colN, n, gcd);
-				fmpz_tdiv_q(colD, colD, gcd);
-			}			
-			
-		}
-		
-		std::string filename = "K" + std::to_string(k) + ".mat";
-		serialize_mat(filename.c_str(), col);		
-		fmpz_mat_clear(col);
-		
-		//Swap current
-		fmpz_mat_swap(curCoeffs, resCoeffs);
-		fmpz_mat_clear(resCoeffs);				
-	}
-	fmpz_clear(factorialK);
-	fmpz_clear(gcd);
-	
-	
-	fmpz_mat_clear(baseCoeffs);
-	fmpz_mat_clear(curCoeffs);
-	
-}
-*/
 
 
 void stirling2_max_lt(int n, int k, int m, fmpz_t countOut) { //Polynomial EGF
@@ -112,7 +27,7 @@ void stirling2_max_lt(int n, int k, int m, fmpz_t countOut) { //Polynomial EGF
 	fmpz_one(coeffDen);
 	for (int i = 1; i < m+1; i++) {
 		fmpz_mul_ui(coeffDen, coeffDen, i);
-		fmpq_set_fmpz_frac(coeff, coeffNum, coeffDen);
+		fmpq_set_fmpz_frac(coeff, coeffNum, coeffDen);		
 		fmpq_poly_set_coeff_fmpq(poly, i-1, coeff);
 	}
 	
@@ -120,12 +35,13 @@ void stirling2_max_lt(int n, int k, int m, fmpz_t countOut) { //Polynomial EGF
 	// 2. Polynomial power to perform convolution
     // NOTE: We factored out x^k, so coefficient for x^n is at index n - k
 	int targetIndex = n - k;
-	fmpq_poly_pow_trunc(poly, poly, k, targetIndex);
+	
+	fmpq_poly_pow_trunc(poly, poly, k, targetIndex+1);
 	
 	
 	// 3. Extract coefficient
     if (targetIndex >= 0 && targetIndex < fmpq_poly_length(poly)) {
-		fmpq_poly_get_coeff_fmpq(coeff, poly, targetIndex);
+		fmpq_poly_get_coeff_fmpq(coeff, poly, targetIndex);		
 		
 		// 4. Multiply by n! / k!
 		//TODO: Precalc
@@ -218,10 +134,10 @@ void stirling2_max_initial_lt(int n, int k, int m, int r, fmpz_t countOut) { //Q
 		fmpq_poly_one(poly);	
 	}
 	else {
-		fmpq_poly_pow_trunc(poly, poly, k-1, targetIndex); //TODO: Should this be truncated?
+		fmpq_poly_pow_trunc(poly, poly, k-1, targetIndex+1); //TODO: Should this be truncated?
 	}
 	//Multiply polynomials
-	fmpq_poly_mullow(polyQ, polyQ, poly, targetIndex);
+	fmpq_poly_mullow(polyQ, polyQ, poly, targetIndex+1);
 	
 	//Extract coefficient
     if (targetIndex >= 0 && targetIndex < fmpq_poly_length(polyQ)) {
@@ -280,6 +196,90 @@ void stirling2_max_initial_gt(int n, int k, int m, int r, fmpz_t countOut) {
 }
 
 /*
+
+void gen_initial_coeffs(int m, fmpz_mat_t coeffsOut) {
+	//Create coefficients for polynomial B(x) = x/1! + x^2/2! + ... + x^m/m!
+	//Table dimensions: 
+	// - two rows, first is the numerator, second is the denominator
+	// - column index i corresponds to power x^i	
+	fmpz_mat_init(coeffsOut, FRACTION_SIZE, m);	
+	
+	fmpz_t fact;
+	fmpz_init(fact);
+	fmpz_one(fact);
+	for (int i = 0; i < m; i++) {
+		fmpz_one(fmpz_mat_entry(coeffsOut, NUM, i));
+		fmpz_mul_ui(fact, fact, i+1);
+		fmpz_set(fmpz_mat_entry(coeffsOut, DEN, i), fact);		
+	}
+	fmpz_clear(fact);
+}
+
+
+void gen_coeff_table(int maxN, int maxK, int m) {//Output is serialized
+	//Note:  This is the precalculated part that is used by the
+	//stirling2_max_less_than() function to make it viable.
+	//We are calculating everything but the final step where n! is added
+	fmpz_mat_t baseCoeffs;	
+	gen_initial_coeffs(m, baseCoeffs);	
+	serialize_mat("K1.mat", baseCoeffs);	
+	
+	fmpz_mat_t curCoeffs;		
+	fmpz_mat_init(curCoeffs, FRACTION_SIZE, m);
+	fmpz_mat_set(curCoeffs, baseCoeffs); //Copy - used for successive powers
+		
+	fmpz_mat_t resCoeffs;	
+	
+	//Raise the base polynomial to the kth power
+	fmpz_t factorialK;	
+	fmpz_t gcd;
+	
+	fmpz_init(factorialK);
+	fmpz_init(gcd);
+	for (int k = 2; k <= maxK; k++) {
+		fmpz_fac_ui(factorialK, k);			
+		mult_poly(baseCoeffs, curCoeffs, resCoeffs);
+		
+		//Extract coefficients, and store - Note: we only need up to power of N-K
+		int maxIdx = std::min(maxN-k+1, (int)(resCoeffs->c)); 
+		fmpz_mat_t col;
+		fmpz_mat_init(col, FRACTION_SIZE, maxIdx);
+		for (int i = 0; i < maxIdx; i++) {
+			//Simplify
+			fmpz* n = fmpz_mat_entry(resCoeffs, NUM, i);
+			fmpz* d = fmpz_mat_entry(resCoeffs, DEN, i);
+			fmpz* colN = fmpz_mat_entry(col, NUM, i);
+			fmpz* colD = fmpz_mat_entry(col, DEN, i);
+						
+			fmpz_mul(colD, d, factorialK); //Precalculate k!, so we don't have to do this later	
+			
+			fmpz_gcd(gcd, n, colD);
+			if (fmpz_is_one(gcd)) {
+				fmpz_set(colN, n);
+			}
+			else {
+				fmpz_tdiv_q(colN, n, gcd);
+				fmpz_tdiv_q(colD, colD, gcd);
+			}			
+			
+		}
+		
+		std::string filename = "K" + std::to_string(k) + ".mat";
+		serialize_mat(filename.c_str(), col);		
+		fmpz_mat_clear(col);
+		
+		//Swap current
+		fmpz_mat_swap(curCoeffs, resCoeffs);
+		fmpz_mat_clear(resCoeffs);				
+	}
+	fmpz_clear(factorialK);
+	fmpz_clear(gcd);
+	
+	
+	fmpz_mat_clear(baseCoeffs);
+	fmpz_mat_clear(curCoeffs);
+	
+}
 void stirling2_max_less_than_coeffs(fmpz_mat_t coeffs, int n, int k, int m, fmpz_t countOut) {
 	fmpz_init(countOut);
 	fmpz_zero(countOut);

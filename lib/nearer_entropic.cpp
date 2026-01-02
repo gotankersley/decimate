@@ -137,7 +137,8 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 			fmpz_print(stirRank);
 			cout << endl;
 		}
-		stirling2_max_between(n, k, prevLargestPartSize, m, count);
+		stirling2_max_between(n, k, prevLargestPartSize, m, count);	
+		cout << endl;
 		fmpz_add(stirRank, stirRank, count);
 		prevLargestPartSize = m;	
 		if (DEBUG) {
@@ -148,12 +149,13 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 		//Note: At this point in the unranking we have just found the value of m (largest part size)
 		
 		// 3. By Set Partition initial part size section
-		stirling2_max_initial_gt(n, k, m, r, count);		
+		stirling2_max_initial_gt(n, k, m, r, count);				
 		fmpz_add(stirRank, stirRank, count);			
 	
 		//Note: At this point in the unranking we know the length of the initial part of the set partition r
 		stirling2_max_initial_ge(n, k, m, r, initialPartSectionSize);
 		fmpz_sub(initialPartSectionSize, initialPartSectionSize, count);
+		
 		
 		// 4. By Set Partition initial element combination 		
 		unusedElements.erase(unusedElements.begin());		
@@ -167,34 +169,47 @@ void nearer_entropic_rank(std::vector<uint8_t>& valSeq, int maxSym, fmpz_t rankO
 			fmpz_bin_uiui(elementSectionSize, n-1, r-1); //The first element is always fixed as the lowest		
 			fmpz_tdiv_q(elementSectionSize, initialPartSectionSize, elementSectionSize);
 			
+			
 			std::vector<int> elementIds(r-1);
 			int e = 0;			
-			std::set<int>::iterator it = setPart[k-1].begin();						
-			for (it++; it != setPart[k-1].end(); it++) { //Ignore first element					
+			std::set<int>::iterator it = setPart[p].begin();						
+			for (it++; it != setPart[p].end(); it++) { //Ignore first element					
 				int elementVal = *it;
 				int elementId = unusedElements.order_of_key(elementVal);
 				elementIds[e] = elementId;
-				//cout << "elementVal: " << +elementVal << endl;
-				//cout << "elementId: " << +elementId << endl;
-				//cout << "elementIds: " << elementIds[e] << endl;
+				cout << "elementVal: " << +elementVal << endl;
+				cout << "elementId: " << +elementId << endl;
+				cout << "elementIds: " << elementIds[e] << endl;
 				e++;
-			}			
+			}	
+						
 			
 			//Remove all the used elements from the set
-			it = setPart[k-1].begin();
-			for (it++; it != setPart[k-1].end(); it++) { //Ignore first element			
+			it = setPart[p].begin();
+			for (it++; it != setPart[p].end(); it++) { //Ignore first element			
 				int elementVal = *it;
 				unusedElements.erase(unusedElements.find(elementVal));							
 			}
 			
+			comb_rank(elementIds, elementRank);	
+			fmpz_mul(elementRank, elementRank, elementSectionSize);
+			fmpz_add(stirRank, stirRank, elementRank);	
 			if (DEBUG) {
 				cout << "Element Ids: ";
 				printVector(elementIds);				
 				cout << endl << endl;
-			}
-			
-			comb_rank(elementIds, elementRank);
-			fmpz_add(stirRank, stirRank, elementRank);			
+				cout << "Element Rank: ";
+				fmpz_print(elementRank);
+				cout << endl;
+				cout << "Stir Rank after elements: ";
+				fmpz_print(stirRank);
+				cout << endl;
+				//cout << "Used elements after: " << endl;
+				//for (int ele:unusedElements) {
+				//	cout << ele << endl;
+				//}
+				//cout << "---" << endl;
+			}						
 		}
 		//Iterate - essentially we are recursing on all the rest of the parts
 		n -= r;
@@ -275,7 +290,7 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 	//  1. Get symbol section
 	if (DEBUG) {
 		cout << "Unranking" << endl;
-		cout << "Rank: " << endl;
+		cout << "Rank: ";
 		fmpz_print(rank);
 		cout << endl;
 	}
@@ -316,10 +331,10 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 	
 
 	if (DEBUG) {
-		cout << "Comb Section Size: " << endl;
+		cout << "Comb Section Size: ";
 		fmpz_print(combSectionSize);
 		cout << endl;
-		cout << "Stir Section Size: " << endl;
+		cout << "Stir Section Size: ";
 		fmpz_print(stirSectionSize);
 		cout << endl;
 	}
@@ -338,7 +353,7 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 	if (DEBUG) {
 		cout << "Comb Rank: " << combRank << endl;
 		cout << "Comb Vals: ";
-		printVector(combVals);
+		printVector(combVals);		
 	}
 	
 	//  3. Get the Sym Perm from Myrvold Rank	
@@ -372,7 +387,7 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 	fmpz_tdiv_q(stirRank, rank, stirSectionSize);
 	fmpz_clear(stirSectionSize);	
 	if (DEBUG) {
-		cout << "Stir Rank: " << endl;
+		cout << "Stir Rank: ";
 		fmpz_print(stirRank);
 		cout << endl;					
 	}	
@@ -382,7 +397,7 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 	indexed_set_t unusedElements;
 	for (int i = 0; i < n; i++) {
 		unusedElements.insert(i);
-	}
+	}	
 	fmpz_t hiCount;
 	fmpz_t initialPartSectionSize;
 	fmpz_t elementSectionSize;
@@ -395,8 +410,10 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 	
 	for (int p = 0; p < symCount-1; p++) {
 		int k = symCount - p;
-		
-		uint8_t partVal = combVals[invPerm[k]];		
+		if (DEBUG) {
+			cout << "---- SET PART ITERATION: " << p << " ---" << endl;
+		}
+		uint8_t partVal = combVals[invPerm[p]];		
 				
 		//Set Partition largest part section
 		//Optimization - use Binary search to find "m"		
@@ -420,59 +437,86 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 		fmpz_sub(stirRank, stirRank, hiCount);
 		m = hi;
 		prevLargestPartSize = m;
-		
-		
+		if (DEBUG) {
+			cout << "Unranked M: " << m << endl;
+			cout << "Stir Rank after largest part size: ";
+			fmpz_print(stirRank);
+			cout << endl;
+		}
+				
 		//Set Partition initial part size section	
 		fmpz_zero(hiCount);
 		lo = 1;
 		bisections = ceil(log2(m));
 		for (int i = 0; i < bisections; i++) {
 			int mid = floor((lo+hi)/2);
-			stirling2_max_initial_gt(n, k, m, mid, count);
+			stirling2_max_initial_gt(n, k, m, mid, count);			
 			if (fmpz_cmp(count, stirRank) > 0) {
 				lo = mid;
 			}
 			else {
 				hi = mid;
 				fmpz_set(hiCount, count);
-			}
-		}
+			}			
+		}		
 		//Done with binary search
 		int r = hi;
 		fmpz_sub(stirRank, stirRank, hiCount);
-		stirling2_max_initial_ge(n, k, m, r, initialPartSectionSize); 
+		stirling2_max_initial_ge(n, k, m, r, initialPartSectionSize); 		
 		fmpz_sub(initialPartSectionSize, initialPartSectionSize, hiCount);
-		countsOut[k] = r;
+		if (fmpz_is_zero(initialPartSectionSize)) {
+			fmpz_one(initialPartSectionSize);
+		}
+		countsOut[p] = r;
+		if (DEBUG) {
+			cout << "Unranked R: " << r << endl;
+			cout << "Stir Rank after initial part size: ";
+			fmpz_print(stirRank);
+			cout << endl;
+		}
 		
 		//Set Partition initial element combination.
 		//The first element is always fixed as the lowest
 		fmpz_bin_uiui(elementSectionSize, n-1, r-1); //The first element is always fixed as the lowest		
 		fmpz_tdiv_q(elementSectionSize, initialPartSectionSize, elementSectionSize);
 		fmpz_tdiv_q(elementRank, stirRank, elementSectionSize);
-		
+		if (DEBUG) {
+			cout << "Element Rank: ";
+			fmpz_print(elementRank);
+			cout << endl;
+			cout << "Element Size Section: ";
+			fmpz_print(elementSectionSize);
+			cout << endl;
+		}
+		fmpz_mul(elementSectionSize, elementRank, elementSectionSize);
 		std::vector<int> elementIds(r-1);	
 		comb_unrank(elementRank, n-1, r-1, elementIds);
 		int initialElement = *unusedElements.begin();
 		unusedElements.erase(unusedElements.begin());		
-		valSeqOut[initialElement] = partVal;
+		valSeqOut[initialElement] = partVal;		
 		if (r > 1) {
 			for (size_t i = 0; i < elementIds.size(); i++) {
 				int elementId = elementIds[i];
 				int element = *unusedElements.find_by_order(elementId);
 				
 				//Apply values here so we don't have to do another loop over the sequence				
-				valSeqOut[element] = partVal;								
+				valSeqOut[element] = partVal;	
 			}
 			//Todo store iterators from previous? std::vector<indexed_set_t::iterator> its
 			for (size_t i = 0; i < elementIds.size(); i++) {
 				int elementId = elementIds[i];
 				unusedElements.erase(unusedElements.find_by_order(elementId));				
 			}
-		}
-		fmpz_mul(elementRank, elementSectionSize, elementRank);
-		fmpz_sub(stirRank, stirRank, elementRank);
+		}			
+		fmpz_sub(stirRank, stirRank, elementSectionSize);
+
 		n -= r; //Iterate		
-	}	
+	}
+	//Use all remaining elements for the last set
+	int finalPartVal = combVals[invPerm[symCount-1]];
+	for (int element: unusedElements) {
+		valSeqOut[element] = finalPartVal;
+	}
 	fmpz_clear(count);
 	fmpz_clear(hiCount);
 	fmpz_clear(initialPartSectionSize);

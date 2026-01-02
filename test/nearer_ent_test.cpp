@@ -14,12 +14,27 @@ const int MAX_SYM = 4;//5;
 const int SEQ_LEN = 3;
 
 int main() {
-		       
+	/*
+	fmpz_t count;
+	fmpz_init(count);	
+	//stirling2_max_lt(5,3,3, count);
+	stirling2_max_initial_lt(5,2,3,2, count);
+	fmpz_print(count);
+	fmpz_clear(count);
+	*/
+	
 	//std::vector<uint8_t> seq = {0, 1, 2, 1, 2};				
 	std::vector<uint8_t> seq = {1,0,3,3,0,1};
 	fmpz_t rank;	
 	fmpz_init(rank);
-	nearer_entropic_rank(seq, MAX_SYM, rank);
+	fmpz_set_ui(rank, 2520);
+	//nearer_entropic_rank(seq, MAX_SYM, rank);
+	std::vector<int> counts(MAX_SYM);
+	std::vector<uint8_t> valSeq(6);
+	nearer_entropic_unrank(rank, 6, MAX_SYM, counts, valSeq);
+	cout << "Seq: ";
+	printVector(valSeq); 
+	cout << endl;
 	fmpz_clear(rank);
 	/*
 	uint64_t total = (uint64_t)pow(MAX_SYM, SEQ_LEN);
