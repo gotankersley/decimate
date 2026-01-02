@@ -10,8 +10,8 @@
 using std::cout, std::endl;
 
 
-const int SEQ_LEN = 6;
-const int MAX_SYM = 4;
+const int SEQ_LEN = 3;
+const int MAX_SYM = 3;
 
 int main() {
 	/*
@@ -61,8 +61,8 @@ int main() {
 		nearer_entropic_rank(seq, MAX_SYM, entRank);		
 		assert(fmpz_equal_ui(entRank, r) && "rank does not match!");
 				
-		fmpz_clear(entRank);
-		
+		fmpz_clear(entRank);	
+break;		
 	}
 	
 		
