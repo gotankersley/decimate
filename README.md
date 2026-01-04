@@ -20,5 +20,5 @@ Unfortunately, while the transformed message has less entropy on average than th
 
 
 ## REFERENCES
-See <a target="_blank" href="https://ieeexplore.ieee.org/document/9360545">Three Representations for Set Partitions</a> for a mathematical framework of how this works.
+See <a target="_blank" href="https://ieeexplore.ieee.org/document/9360545">Three Representations for Set Partitions</a> for a mathematical framework of how this works.<br>
 Also see <a target="_blank" href="https://www.researchgate.net/publication/377851895_Lexicographic_unranking_algorithms_for_the_Twelvefold_Way">Lexicographic_unranking_algorithms_for_the_Twelvefold_Way</a> as well.
