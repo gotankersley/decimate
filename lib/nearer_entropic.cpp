@@ -537,6 +537,7 @@ void nearer_entropic_unrank(fmpz_t rank, int seqLen, int maxSym, std::vector<int
 		n -= r; //Iterate		
 	}
 	//Use all remaining elements for the last set
+	countsOut[maxSym-1] = unusedElements.size();
 	int finalPartVal = combVals[invPerm[symCount-1]];
 	for (int element: unusedElements) {		
 		valSeqOut[element] = finalPartVal;
